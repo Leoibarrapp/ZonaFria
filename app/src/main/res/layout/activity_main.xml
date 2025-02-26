@@ -1692,6 +1692,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -1745,11 +1746,13 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/et_uds_2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -1803,11 +1806,13 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/et_uds_3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -1861,11 +1866,13 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/et_uds_4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -1919,11 +1926,13 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/et_uds_5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -1977,11 +1986,13 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/et_uds_6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -2035,11 +2046,13 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/et_uds_7"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -2093,11 +2106,13 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/et_uds_8"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -2126,6 +2141,7 @@
                     android:textSize="20sp" />
 
                 <TextView
+                    android:id="@+id/tv_uds_totales_turno"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"

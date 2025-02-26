@@ -2,6 +2,8 @@ package com.example.vidosaZF
 
 import android.os.Bundle
 import android.os.Handler
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -13,9 +15,11 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     // IDs de los TextViews para mostrar las horas en turno 1 y turno 2
-    private lateinit var horas1TextViews: List<TextView>
-    private lateinit var horas2TextViews: List<TextView>
-    private lateinit var fechaTextView: TextView
+    private lateinit var horas1TVs: List<TextView>
+    private lateinit var horas2TVs: List<TextView>
+    private lateinit var fechaTV: TextView
+    private lateinit var udsTotalesTurnoTV: TextView
+    private lateinit var udsTotalesHoraETs: List<EditText>
 
     private var turno: Int = 0
 
@@ -39,9 +43,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        fechaTV = findViewById(R.id.tv_fecha)
+        udsTotalesTurnoTV = findViewById(R.id.tv_uds_totales_turno)
+
+        val list = listOf(R.id.et_uds_1, R.id.et_uds_2, R.id.et_uds_3, R.id.et_uds_4, R.id.et_uds_5, R.id.et_uds_6, R.id.et_uds_7, R.id.et_uds_8)
+        udsTotalesHoraETs = list.map { id -> findViewById(id) }
+
+
         // Obtiene los TextViews de las horas para actualizarlos posteriormente
-        fechaTextView = findViewById(R.id.tv_fecha)
         obtenerHorasTextViews()
+        calcularUdsTotalesTurno()
+
         // Inicia la ejecución del Runnable
         handler.post(runnableCode)
     }
@@ -60,8 +72,8 @@ class MainActivity : AppCompatActivity() {
         )
 
         // Inicializa los TextViews para mostrar las horas en turno 1 y turno 2
-        horas1TextViews = horasIds1.map { id -> findViewById(id) }
-        horas2TextViews = horasIds2.map { id -> findViewById(id) }
+        horas1TVs = horasIds1.map { id -> findViewById(id) }
+        horas2TVs = horasIds2.map { id -> findViewById(id) }
     }
 
     // Obtiene la hora actual
@@ -88,9 +100,7 @@ class MainActivity : AppCompatActivity() {
     fun actualizarTurno() {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val currentDate = dateFormat.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
-        fechaTextView.setText(currentDate)
-
-        fechaTextView.setText(currentDate)
+        fechaTV.setText(currentDate)
 
             turno = decidirTurno()
 
@@ -103,12 +113,34 @@ class MainActivity : AppCompatActivity() {
 
         // Actualiza los TextViews con las horas correspondientes al turno
         for(i in 0..7) {
-            horas1TextViews[i].text = horasTurno[i]
-            horas2TextViews[i].text = horasTurno[i]
+            horas1TVs[i].text = horasTurno[i]
+            horas2TVs[i].text = horasTurno[i]
         }
     }
 
-    fun calcularTotalUds() {
+    fun calcularUdsTotalesTurno() {
+        udsTotalesHoraETs.forEach { et ->
+            et.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    sumarUds()
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            })
+        }
+    }
+
+    fun sumarUds() {
+        var sum = 0
+        udsTotalesHoraETs.forEach{ et ->
+            val text = et.text.toString()
+
+            if (text.isNotEmpty()) {
+                sum += text.toInt()
+            }
+        }
+
+        udsTotalesTurnoTV.text = sum.toString()
     }
 }
