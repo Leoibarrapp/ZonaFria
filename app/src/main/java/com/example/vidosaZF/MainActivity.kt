@@ -5,13 +5,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TableLayout
-import android.widget.TableRow
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.doOnTextChanged
+import androidx.core.content.ContextCompat
 import com.android.volley.toolbox.JsonObjectRequest
 import org.json.JSONArray
 import org.json.JSONObject
@@ -27,21 +27,24 @@ import java.text.DecimalFormat
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var camposObligatorios: List<View>
 
-    // IDs de los TextViews para mostrar las horas en turno 1 y turno 2
-    private lateinit var horas1TVs: List<TextView>
-    private lateinit var horas2TVs: List<TextView>
-    private lateinit var fechaTV: TextView
-    private lateinit var titulo: TextView
-    private lateinit var udsHoraET: EditText
-    private lateinit var udsTotalesTurnoTV: TextView
-    private lateinit var udsTotalesHoraTVs: List<TextView>
-    private lateinit var eficienciaHoraTVs: List<TextView>
-    private lateinit var eficienciaTotalTurno: TextView
+    //lista de filas que contiene a la lista de celdas
     private lateinit var celdasTabla1: List<List<EditText>>
-    private lateinit var btnGuardar: Button
 
-    private lateinit var tabla: TableLayout
+    private lateinit var horasTVs: List<List<TextView>>
+//    private lateinit var horas1TVs: List<TextView>
+//    private lateinit var horas2TVs: List<TextView>
+
+    private lateinit var udsHoraET: EditText
+    private lateinit var fechaTV: TextView
+
+    private lateinit var udsTotalesHoraTVs: List<TextView>
+    private lateinit var udsTotalesTurnoTV: TextView
+    private lateinit var eficienciaHoraTVs: List<TextView>
+    private lateinit var eficienciaTotalTurnoTV: TextView
+
+    private lateinit var btnGuardar: Button
 
     private val serverUrl = "http://192.168.68.64:8080"
     private lateinit var queue: com.android.volley.RequestQueue
@@ -50,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     // Handler y Runnable para actualizar el turno cada minuto
     private val handler = Handler()
-    private val runnableCode = object : Runnable {
+    private val runnableActualizarTurno = object : Runnable {
         override fun run() {
             actualizarTurno()
             // Programa la siguiente ejecución del Runnable en 1 minuto (60 * 1000 milisegundos -> 60 segundos)
@@ -61,29 +64,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
-    // Metodo onCreate que se ejecuta al crear la actividad
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        tabla = findViewById(R.id.table)
-
-        btnGuardar= findViewById(R.id.btn_submit)
-        titulo = findViewById(R.id.tv_title)
         fechaTV = findViewById(R.id.tv_fecha)
+
         udsHoraET = findViewById(R.id.et_uds_hora)
 
         udsTotalesTurnoTV = findViewById(R.id.tv_uds_totales_turno)
-        eficienciaTotalTurno = findViewById(R.id.tv_eficiencia_total_turno)
+        eficienciaTotalTurnoTV = findViewById(R.id.tv_eficiencia_total_turno)
 
-        horas1TVs = listOf(R.id.tv_hora1_tabla1, R.id.tv_hora2_tabla1, R.id.tv_hora3_tabla1, R.id.tv_hora4_tabla1, R.id.tv_hora5_tabla1, R.id.tv_hora6_tabla1, R.id.tv_hora7_tabla1, R.id.tv_hora8_tabla1)
-            .map { id -> findViewById(id) }
-        horas2TVs = listOf(R.id.tv_hora1_tabla2, R.id.tv_hora2_tabla2, R.id.tv_hora3_tabla2, R.id.tv_hora4_tabla2, R.id.tv_hora5_tabla2, R.id.tv_hora6_tabla2, R.id.tv_hora7_tabla2, R.id.tv_hora8_tabla2)
-            .map { id -> findViewById(id) }
+        btnGuardar = findViewById(R.id.btn_submit)
 
-        //Lista de filas, que a su vez tienen la lista de celdas de cada fila
+        // TextViews de las horas
+        horasTVs = listOf(
+            listOf(R.id.tv_hora1_tabla1, R.id.tv_hora2_tabla1, R.id.tv_hora3_tabla1, R.id.tv_hora4_tabla1, R.id.tv_hora5_tabla1, R.id.tv_hora6_tabla1, R.id.tv_hora7_tabla1, R.id.tv_hora8_tabla1),
+            listOf(R.id.tv_hora1_tabla2, R.id.tv_hora2_tabla2, R.id.tv_hora3_tabla2, R.id.tv_hora4_tabla2, R.id.tv_hora5_tabla2, R.id.tv_hora6_tabla2, R.id.tv_hora7_tabla2, R.id.tv_hora8_tabla2)
+        ).map { tabla -> tabla.map { id -> findViewById<TextView>(id) } }
+
+        // Lista de filas, que a su vez tienen la lista de celdas
         celdasTabla1 = listOf(
             listOf(R.id.A1_Hrs,R.id.A2_Hrs,R.id.A3_Hrs,R.id.A4_Hrs,R.id.A5_Hrs,R.id.A6_Hrs,R.id.A7_Hrs,R.id.A8_Hrs,R.id.A9_Def1,R.id.A10_Def2,R.id.A11_Def3,R.id.A12_Def4,R.id.A13_Def5,R.id.A14_Def6),
             listOf(R.id.B1_Hrs,R.id.B2_Hrs,R.id.B3_Hrs,R.id.B4_Hrs,R.id.B5_Hrs,R.id.B6_Hrs,R.id.B7_Hrs,R.id.B8_Hrs,R.id.B9_Def1,R.id.B10_Def2,R.id.B11_Def3,R.id.B12_Def4,R.id.B13_Def5,R.id.B14_Def6),
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Inicializa el Map con los EditText correspondientes una vez, para acceder hacer:      udsTotalesHoraETs['X']
+        // Lista de las unidades totales de cada hora
         udsTotalesHoraTVs = listOf(R.id.tv_uds_A, R.id.tv_uds_B, R.id.tv_uds_C, R.id.tv_uds_D, R.id.tv_uds_E, R.id.tv_uds_F, R.id.tv_uds_G, R.id.tv_uds_H)
             .map { id ->
                 val udsTotalesHora = findViewById<TextView>(id)
@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity() {
                 udsTotalesHora
             }
 
+        // Lista de las eficiencias de cada hora
         eficienciaHoraTVs = listOf(R.id.tv_eficiencia_A, R.id.tv_eficiencia_B, R.id.tv_eficiencia_C, R.id.tv_eficiencia_D, R.id.tv_eficiencia_E, R.id.tv_eficiencia_F, R.id.tv_eficiencia_G, R.id.tv_eficiencia_H)
             .map { id ->
                 val eficienciaHora = findViewById<TextView>(id)
@@ -119,65 +120,38 @@ class MainActivity : AppCompatActivity() {
                 eficienciaHora
             }
 
+        camposObligatorios = listOf(R.id.et_grupo, R.id.et_linea, R.id.et_molde, R.id.et_velocidad, R.id.et_tiempo_de_archa, R.id.et_obj_de_linea, R.id.et_uds_hora, R.id.et_uds_turno, R.id.et_firma,)
+            .map { id -> findViewById<View>(id) } + udsTotalesHoraTVs + udsTotalesTurnoTV + eficienciaHoraTVs + eficienciaTotalTurnoTV
+
+        btnGuardar.setOnClickListener{
+            if (verificarCamposObligatorios()) {
+                enviarDatosTablaUsuario()
+            }
+            else {
+                mostrarMensaje("Por favor, complete todos los campos obligatorios.")
+            }
+        }
+
         queue = Volley.newRequestQueue(this) // Initialize the request queue here
-
-        // Inicia la ejecución del Runnable
-        handler.post(runnableCode)
-
-//        btnGuardar.setOnClickListener{
-//            enviarDatosTablaUsuario()
-//        }
+        handler.post(runnableActualizarTurno)
     }
 
 
 
 
 
-//    fun enviarDatosTablaUsuario() {
-//        val casillasTabla1=celdasTabla1.map { et ->
-//            val text = et.text.toString()
-//            if (text.isNotEmpty() && text.matches(Regex("\\d+"))) {
-//                text.toInt()
-//            } else {
-//                0 // O un valor por defecto que prefieras
-//        }}
-//        val udsPorHora = udsTotalesHoraTVs.map { tv ->
-//            val text = tv.text.toString()
-//            if (text.isNotEmpty() && text.matches(Regex("\\d+"))) {
-//                text.toInt()
-//            } else {
-//                0 // O un valor por defecto que prefieras
-//            }
-//        }
-//
-//        try {
-//            val jsonObject = JSONObject()
-//            jsonObject.put("celdas", JSONArray(casillasTabla1))
-//            jsonObject.put("udsPorHora", JSONArray(udsPorHora))
-//            val url = "${serverUrl}/enviar_datos_usuario" // URL para la solicitud POST
-//            val jsonObjectRequest = JsonObjectRequest(
-//                Request.Method.POST, url, jsonObject,
-//                { response ->
-//                    // Manejar la respuesta del servidor
-//                    titulo.text = "Datos enviados correctamente"
-//                },
-//                { error ->
-//                    // Manejar el error
-//                    titulo.text = "Error al enviar los datos: ${error.message}"
-//                })
-//
-//            queue.add(jsonObjectRequest)
-//
-//        } catch (e: JSONException) {
-//            titulo.text = "Error al crear JSON: ${e.message}"
-//            e.printStackTrace()
-//        }
-//        // 3. Enviar los datos al servidor
-//    }
+    fun mostrarMensaje(mensaje: String) {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(mensaje)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+        val alertDialog = builder.create()
+        alertDialog.show()
 
-
-
-
+        val color = ContextCompat.getColor(this, R.color.primary)
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(color)
+    }
 
     // Obtiene la hora actual
     fun obtenerHora(): Int {
@@ -216,10 +190,12 @@ class MainActivity : AppCompatActivity() {
 
         // Actualiza los TextViews con las horas correspondientes al turno
         for(i in 0..7) {
-            horas1TVs[i].text = horasTurno[i]
-            horas2TVs[i].text = horasTurno[i]
+            horasTVs[0][i].text = horasTurno[i]
+            horasTVs[1][i].text = horasTurno[i]
         }
     }
+
+
 
 
 
@@ -341,10 +317,10 @@ class MainActivity : AppCompatActivity() {
 
         if (contadorValidos > 0) {
             val promedio = suma / contadorValidos
-            eficienciaTotalTurno.text = String.format(Locale.getDefault(),"%.2f%%", promedio)
+            eficienciaTotalTurnoTV.text = String.format(Locale.getDefault(),"%.2f%%", promedio)
         }
         else {
-            eficienciaTotalTurno.text = ""
+            eficienciaTotalTurnoTV.text = ""
         }
     }
 
@@ -360,5 +336,61 @@ class MainActivity : AppCompatActivity() {
             'H' -> 7
             else -> throw IllegalArgumentException("Fila inválida: $charFila")
         }
+    }
+
+    fun verificarCamposObligatorios(): Boolean {
+        camposObligatorios.forEach { view ->
+            if (view is EditText && view.text.toString().isEmpty()) {
+                return false
+            }
+            else if (view is TextView && view.text.toString().isEmpty()) {
+                return false
+            }
+        }
+        return true
+    }
+
+    fun enviarDatosTablaUsuario() {
+        val casillasTabla1 = celdasTabla1.map { fila ->
+            fila.map { et ->
+                val text = et.text.toString()
+                if (text.isNotEmpty() && text.matches(Regex("\\d+"))) {
+                    text.toInt()
+                } else {
+                    0 // O un valor por defecto que prefieras
+                }
+            }}
+        val udsPorHora = udsTotalesHoraTVs.map { tv ->
+            val text = tv.text.toString()
+            if (text.isNotEmpty() && text.matches(Regex("\\d+"))) {
+                text.toInt()
+            } else {
+                0 // O un valor por defecto que prefieras
+            }
+        }
+
+        try {
+            val jsonObject = JSONObject()
+            jsonObject.put("celdas", JSONArray(casillasTabla1))
+            jsonObject.put("udsPorHora", JSONArray(udsPorHora))
+            val url = "${serverUrl}/enviar_datos_usuario" // URL para la solicitud POST
+            val jsonObjectRequest = JsonObjectRequest(
+                Request.Method.POST, url, jsonObject,
+                { response ->
+                    // Manejar la respuesta del servidor
+                    mostrarMensaje("Datos enviados correctamente")
+                },
+                { error ->
+                    // Manejar el error
+                    mostrarMensaje("Error al enviar los datos: ${error.message}")
+                })
+
+            queue.add(jsonObjectRequest)
+
+        } catch (e: JSONException) {
+            mostrarMensaje("Error al crear JSON: ${e.message}")
+            e.printStackTrace()
+        }
+        // 3. Enviar los datos al servidor
     }
 }
