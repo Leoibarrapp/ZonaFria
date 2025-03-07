@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
 
     //lista de filas que contiene a la lista de celdas
     private lateinit var celdasTabla1: List<List<EditText>>
+    private lateinit var celdasTabla2: List<List<EditText>>
 
     private lateinit var horasTVs: List<List<TextView>>
 //    private lateinit var horas1TVs: List<TextView>
@@ -71,6 +72,14 @@ class MainActivity : AppCompatActivity() {
         fechaTV = findViewById(R.id.tv_fecha)
 
         udsHoraET = findViewById(R.id.et_uds_hora)
+        udsHoraET.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val filas = listOf('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
+                filas.forEach { fila -> calcularEficienciaHora(fila) }
+            }
+        })
 
         udsTotalesTurnoTV = findViewById(R.id.tv_uds_totales_turno)
         eficienciaTotalTurnoTV = findViewById(R.id.tv_eficiencia_total_turno)
@@ -97,9 +106,16 @@ class MainActivity : AppCompatActivity() {
             fila.map { id ->
                 val celda = findViewById<EditText>(id)
                 celda.tag = resources.getResourceEntryName(id)
-                    observarCambiosCeldas(celda)
-                celda
+                observarCambiosCeldas(celda)
+                    celda
             }
+        }
+
+        celdasTabla2 = listOf(
+            listOf(R.id.A1_ICD, R.id.A2_ICD, R.id.A3_ICD), listOf(R.id.B1_ICD, R.id.B2_ICD, R.id.B3_ICD), listOf(R.id.C1_ICD, R.id.C2_ICD, R.id.C3_ICD), listOf(R.id.D1_ICD, R.id.D2_ICD, R.id.D3_ICD),
+            listOf(R.id.E1_ICD, R.id.E2_ICD, R.id.E3_ICD), listOf(R.id.F1_ICD, R.id.F2_ICD, R.id.F3_ICD), listOf(R.id.G1_ICD, R.id.G2_ICD, R.id.G3_ICD), listOf(R.id.H1_ICD, R.id.H2_ICD, R.id.H3_ICD)
+        ).map { fila ->
+            fila.map { id -> findViewById(id) }
         }
 
         // Lista de las unidades totales de cada hora
@@ -107,8 +123,8 @@ class MainActivity : AppCompatActivity() {
             .map { id ->
                 val udsTotalesHora = findViewById<TextView>(id)
                 udsTotalesHora.tag = resources.getResourceEntryName(id)
-                    observarCambiosUdsTotalesHora(udsTotalesHora)
-                udsTotalesHora
+                observarCambiosUdsTotalesHora(udsTotalesHora)
+                    udsTotalesHora
             }
 
         // Lista de las eficiencias de cada hora
@@ -116,8 +132,8 @@ class MainActivity : AppCompatActivity() {
             .map { id ->
                 val eficienciaHora = findViewById<TextView>(id)
                 eficienciaHora.tag = resources.getResourceEntryName(id)
-                    observarCambiosEficienciaHora(eficienciaHora)
-                eficienciaHora
+                observarCambiosEficienciaHora(eficienciaHora)
+                    eficienciaHora
             }
 
         camposObligatorios = listOf(R.id.et_grupo, R.id.et_linea, R.id.et_molde, R.id.et_velocidad, R.id.et_tiempo_de_archa, R.id.et_obj_de_linea, R.id.et_uds_hora, R.id.et_uds_turno, R.id.et_firma,)
@@ -193,6 +209,35 @@ class MainActivity : AppCompatActivity() {
             horasTVs[0][i].text = horasTurno[i]
             horasTVs[1][i].text = horasTurno[i]
         }
+
+        restablecerTablas()
+
+        mostrarMensaje("Nuevo Turno")
+    }
+
+    fun restablecerTablas() {
+        celdasTabla1.forEach { fila ->
+            fila.forEach { celda ->
+                celda.text.clear()
+            }
+        }
+
+        celdasTabla2.forEach { fila ->
+            fila.forEach { celda ->
+                celda.text.clear()
+            }
+        }
+
+        camposObligatorios.forEach { view ->
+            if (view is EditText) {
+                view.text.clear()
+            }
+            else if (view is TextView) {
+                view.text = ""
+            }
+        }
+
+        findViewById<EditText>(R.id.et_observaciones).text.clear()
     }
 
 
@@ -291,14 +336,14 @@ class MainActivity : AppCompatActivity() {
                 in 0.0..50.0 -> eficienciaTV.setBackgroundResource(R.drawable.red_cell_shape)
                 in 50.0..80.0 -> eficienciaTV.setBackgroundResource(R.drawable.yellow_cell_shape)
                 in 80.0..100.0 -> eficienciaTV.setBackgroundResource(R.drawable.green_cell_shape)
-                else -> eficienciaTV.setBackgroundColor(Color.WHITE)
+                else -> eficienciaTV.setBackgroundColor(Color.GRAY)
             }
 
             eficienciaTV.text = String.format(Locale.getDefault(),"%.2f", eficiencia)
         }
         else {
             eficienciaTV.text = ""
-            eficienciaTV.setBackgroundResource(R.drawable.cell_shape)
+            eficienciaTV.setBackgroundResource(R.drawable.header_cell_shape)
         }
     }
 
