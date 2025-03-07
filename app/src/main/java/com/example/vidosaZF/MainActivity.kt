@@ -3,6 +3,7 @@ package com.example.vidosaZF
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -21,12 +22,12 @@ import java.util.Calendar
 import java.util.Locale
 
 import com.android.volley.Request
-import com.android.volley.Response
 import org.json.JSONException
-import java.text.DecimalFormat
 
 
 class MainActivity : AppCompatActivity() {
+    private var turno: Int = 0
+
     private lateinit var camposObligatorios: List<View>
 
     //lista de filas que contiene a la lista de celdas
@@ -50,10 +51,8 @@ class MainActivity : AppCompatActivity() {
     private val serverUrl = "http://192.168.68.64:8080"
     private lateinit var queue: com.android.volley.RequestQueue
 
-    private var turno: Int = 0
-
     // Handler y Runnable para actualizar el turno cada minuto
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private val runnableActualizarTurno = object : Runnable {
         override fun run() {
             actualizarTurno()
@@ -195,24 +194,29 @@ class MainActivity : AppCompatActivity() {
         val currentDate = dateFormat.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
         fechaTV.text = currentDate
 
-        turno = decidirTurno()
+        val nuevoTurno = decidirTurno()
 
-        val horasTurno = when (turno) {
-            1 -> listOf("7:00 am", "8:00 am", "9:00 am", "10:00 am", "11:00 am", "12:00 pm", "1:00 pm", "2:00 pm")
-            2 -> listOf("3:00 pm", "4:00 pm", "5:00 pm", "6:00 pm", "7:00 pm", "8:00 pm", "9:00 pm", "10:00 pm")
-            3 -> listOf("11:00 pm", "12:00 am", "1:00 am", "2:00 am", "3:00 am", "4:00 am", "5:00 am", "6:00 am")
-            else -> throw IllegalArgumentException("Turno inválido: $turno")
+        //verifica si el turno debe cambiar o no
+        if(turno != nuevoTurno){
+            turno = nuevoTurno
+
+            val horasTurno = when (turno) {
+                1 -> listOf("7:00 am", "8:00 am", "9:00 am", "10:00 am", "11:00 am", "12:00 pm", "1:00 pm", "2:00 pm")
+                2 -> listOf("3:00 pm", "4:00 pm", "5:00 pm", "6:00 pm", "7:00 pm", "8:00 pm", "9:00 pm", "10:00 pm")
+                3 -> listOf("11:00 pm", "12:00 am", "1:00 am", "2:00 am", "3:00 am", "4:00 am", "5:00 am", "6:00 am")
+                else -> throw IllegalArgumentException("Turno inválido: $turno")
+            }
+
+            // Actualiza los TextViews con las horas correspondientes al turno
+            for(i in 0..7) {
+                horasTVs[0][i].text = horasTurno[i]
+                horasTVs[1][i].text = horasTurno[i]
+            }
+
+            restablecerTablas()
+
+            mostrarMensaje("Nuevo Turno")
         }
-
-        // Actualiza los TextViews con las horas correspondientes al turno
-        for(i in 0..7) {
-            horasTVs[0][i].text = horasTurno[i]
-            horasTVs[1][i].text = horasTurno[i]
-        }
-
-        restablecerTablas()
-
-        mostrarMensaje("Nuevo Turno")
     }
 
     fun restablecerTablas() {
