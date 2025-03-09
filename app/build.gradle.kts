@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -38,6 +39,7 @@ android {
 dependencies {
     implementation("org.apache.poi:poi:5.4.0")
     implementation("org.apache.poi:poi-ooxml:5.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation(libs.commons.collections4)
 
     implementation(libs.okhttp)

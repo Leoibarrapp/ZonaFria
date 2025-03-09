@@ -26,6 +26,9 @@ import org.json.JSONException
 
 
 class MainActivity : AppCompatActivity() {
+    //mapa con los codigos y nombres de los defectos
+//    private val mapaDefectos = Defectos.map
+
     private var turno: Int = 0
 
     private lateinit var camposObligatorios: List<View>
@@ -89,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         horasTVs = listOf(
             listOf(R.id.tv_hora1_tabla1, R.id.tv_hora2_tabla1, R.id.tv_hora3_tabla1, R.id.tv_hora4_tabla1, R.id.tv_hora5_tabla1, R.id.tv_hora6_tabla1, R.id.tv_hora7_tabla1, R.id.tv_hora8_tabla1),
             listOf(R.id.tv_hora1_tabla2, R.id.tv_hora2_tabla2, R.id.tv_hora3_tabla2, R.id.tv_hora4_tabla2, R.id.tv_hora5_tabla2, R.id.tv_hora6_tabla2, R.id.tv_hora7_tabla2, R.id.tv_hora8_tabla2)
-        ).map { tabla -> tabla.map { id -> findViewById<TextView>(id) } }
+        ).map { tabla -> tabla.map { id -> findViewById(id) } }
 
         // Lista de filas, que a su vez tienen la lista de celdas
         celdasTabla1 = listOf(
@@ -135,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                     eficienciaHora
             }
 
-        camposObligatorios = listOf(R.id.et_grupo, R.id.et_linea, R.id.et_molde, R.id.et_velocidad, R.id.et_tiempo_de_archa, R.id.et_obj_de_linea, R.id.et_uds_hora, R.id.et_uds_turno, R.id.et_firma,)
+        camposObligatorios = listOf(R.id.et_grupo, R.id.et_linea, R.id.et_molde, R.id.et_velocidad, R.id.et_tiempo_de_archa, R.id.et_obj_de_linea, R.id.et_uds_hora, R.id.et_uds_turno, R.id.et_firma)
             .map { id -> findViewById<View>(id) } + udsTotalesHoraTVs + udsTotalesTurnoTV + eficienciaHoraTVs + eficienciaTotalTurnoTV
 
         btnGuardar.setOnClickListener{
