@@ -1,5 +1,6 @@
 package com.example.vidosaZF
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -22,14 +23,19 @@ import java.util.Calendar
 import java.util.Locale
 
 import com.android.volley.Request
+import okhttp3.OkHttpClient
 import org.json.JSONException
 
-
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var webSocket: WebSocketManager
+    private val socketURL = "ws://172.16.0.213:8080"
+
     //mapa con los codigos y nombres de los defectos
 //    private val mapaDefectos = Defectos.map
 
     private var turno: Int = 0
+    private var horaActual: Int = 0
 
     private lateinit var camposObligatorios: List<View>
 
@@ -71,6 +77,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        webSocket = WebSocketManager()
+        webSocket.connect(socketURL)
+
+//        if(!webSocket.isConnected) {
+//            mostrarMensaje(
+//                mensaje = "No se pudo conectar al servidor. Por favor, revise la conexión e intente nuevamente. ",
+//                botonCancelar = "Cerrar aplicación" to { finishAffinity() }
+//            )
+//        }
+
         fechaTV = findViewById(R.id.tv_fecha)
 
         udsHoraET = findViewById(R.id.et_uds_hora)
@@ -109,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                 val celda = findViewById<EditText>(id)
                 celda.tag = resources.getResourceEntryName(id)
                 observarCambiosCeldas(celda)
-                    celda
+                    celda // Return the EditText instance
             }
         }
 
@@ -154,6 +170,10 @@ class MainActivity : AppCompatActivity() {
         handler.post(runnableActualizarTurno)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        webSocket.closeConnection()
+    }
 
 
 
@@ -164,6 +184,7 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("OK") { dialog, _ ->
                 dialog.dismiss()
             }
+
         val alertDialog = builder.create()
         alertDialog.show()
 
@@ -171,10 +192,46 @@ class MainActivity : AppCompatActivity() {
         alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(color)
     }
 
+
+    fun mostrarMensaje(
+        mensaje: String,
+        botonAceptar: Pair<String, () -> Unit>? = null,
+        botonCancelar: Pair<String, () -> Unit>? = null
+    ) {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(mensaje)
+
+        if(botonAceptar != null) {
+            builder.setPositiveButton(botonAceptar.first) { dialog, _ ->
+                botonAceptar.second() // Ejecuta la función asociada
+                dialog.dismiss()
+            }
+        }
+
+        if(botonCancelar != null) {
+            builder.setNegativeButton(botonCancelar.first) { dialog, _ ->
+                botonCancelar.second() // Ejecuta la función asociada
+                dialog.dismiss()
+            }
+        }
+
+        val alertDialog = builder.create()
+        alertDialog.show()
+        if(botonCancelar != null){
+            alertDialog.setCancelable(false)
+        }
+
+        val colorAceptar = ContextCompat.getColor(this, R.color.primary)
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(colorAceptar)
+        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.RED)
+    }
+
+
+
     // Obtiene la hora actual
     fun obtenerHora(): Int {
         val hora = Calendar.getInstance()[Calendar.HOUR_OF_DAY]
-
+        horaActual = hora
         // Muestra la hora actual en el campo de texto et_fecha
         return hora
     }
@@ -216,9 +273,9 @@ class MainActivity : AppCompatActivity() {
                 horasTVs[1][i].text = horasTurno[i]
             }
 
-            restablecerTablas()
+//            restablecerTablas()
 
-            mostrarMensaje("Nuevo Turno")
+//            mostrarMensaje("Nuevo Turno")
         }
     }
 
@@ -255,15 +312,32 @@ class MainActivity : AppCompatActivity() {
 
     //Le aplica el listener de texto a las celdas para actualizar los totales de cada hora
     fun observarCambiosCeldas(celda: EditText) {
-        if(!celda.tag.toString().contains("Def")) {
+        //si es defecto enviar mensajes al servidor
+        if(celda.tag.toString().contains("Def")) {
             celda.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun afterTextChanged(s: Editable?) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    webSocket.sendMessage(JSONObject().apply {
+                        put("type", "defect")
+                        put("hour", horaActual)
+                        put("tag", celda.tag.toString())
+                        put("data", celda.text.toString())
+                    })
+                }
+            })
+
+        }
+        //si no es defecto realizar calculos
+        else {
+            celda.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     val fila: Char = celda.tag.toString().first()
                     calcularUdsTotalesHora(fila)
                 }
+                override fun afterTextChanged(s: Editable?) {}
             })
         }
     }
@@ -271,23 +345,31 @@ class MainActivity : AppCompatActivity() {
     fun observarCambiosUdsTotalesHora(tv: TextView) {
         tv.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val fila = tv.tag.toString().last()
                 calcularEficienciaHora(fila)
                 calcularUdsTotalesTurno()
             }
+            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
     fun observarCambiosEficienciaHora(tv: TextView) {
         tv.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 calcularEficienciaTotalTurno()
+            }
+
+            //enviar mensaje al servidor
+            override fun afterTextChanged(s: Editable?) {
+                webSocket.sendMessage(JSONObject().apply {
+                    put("type", "efficiency")
+                    put("hour", horaActual)
+                    put("tag", tv.tag.toString())
+                    put("data", tv.text.toString())
+                })
             }
         })
     }
@@ -434,15 +516,16 @@ class MainActivity : AppCompatActivity() {
                 },
                 { error ->
                     // Manejar el error
-                    mostrarMensaje("Error al enviar los datos: ${error.message}")
+                    mostrarMensaje( "Error al enviar los datos: ${error.message}")
                 })
 
-            queue.add(jsonObjectRequest)
+//            queue.add(jsonObjectRequest)
 
         } catch (e: JSONException) {
             mostrarMensaje("Error al crear JSON: ${e.message}")
             e.printStackTrace()
         }
         // 3. Enviar los datos al servidor
+
     }
 }
