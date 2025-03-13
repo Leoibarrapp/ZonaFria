@@ -26,16 +26,15 @@ import com.android.volley.Request
 import okhttp3.OkHttpClient
 import org.json.JSONException
 
-class MainActivity : AppCompatActivity() {
-
+class MainActivity : AppCompatActivity(), WebSocketEventListener {
     private lateinit var webSocket: WebSocketManager
-    private val socketURL = "ws://172.16.0.213:8080"
 
     //mapa con los codigos y nombres de los defectos
 //    private val mapaDefectos = Defectos.map
 
     private var turno: Int = 0
     private var horaActual: Int = 0
+
 
     private lateinit var camposObligatorios: List<View>
 
@@ -57,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var btnGuardar: Button
 
-    private val serverUrl = "http://192.168.68.64:8080"
+    private val serverUrl = "http://192.168.68.60:8080"
     private lateinit var queue: com.android.volley.RequestQueue
 
     // Handler y Runnable para actualizar el turno cada minuto
@@ -77,15 +76,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        webSocket = WebSocketManager()
-        webSocket.connect(socketURL)
-
-//        if(!webSocket.isConnected) {
-//            mostrarMensaje(
-//                mensaje = "No se pudo conectar al servidor. Por favor, revise la conexión e intente nuevamente. ",
-//                botonCancelar = "Cerrar aplicación" to { finishAffinity() }
-//            )
-//        }
+        webSocket = WebSocketManager(this)
+        webSocket.connect()
 
         fechaTV = findViewById(R.id.tv_fecha)
 
@@ -194,11 +186,13 @@ class MainActivity : AppCompatActivity() {
 
 
     fun mostrarMensaje(
+        titulo: String? = null,
         mensaje: String,
         botonAceptar: Pair<String, () -> Unit>? = null,
         botonCancelar: Pair<String, () -> Unit>? = null
     ) {
         val builder = AlertDialog.Builder(this)
+        builder.setTitle(titulo)
         builder.setMessage(mensaje)
 
         if(botonAceptar != null) {
@@ -527,5 +521,16 @@ class MainActivity : AppCompatActivity() {
         }
         // 3. Enviar los datos al servidor
 
+    }
+
+    override fun onConnectionFailed(reason: String) {
+        runOnUiThread {
+            mostrarMensaje(
+                titulo = "Error",
+                mensaje = "Hubo un error conectandose con el servidor:\n $reason",
+                botonAceptar = null,
+                botonCancelar = "Cerrar app" to { finishAffinity() }
+            )
+        }
     }
 }

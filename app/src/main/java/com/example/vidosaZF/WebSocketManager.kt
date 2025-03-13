@@ -1,55 +1,59 @@
 package com.example.vidosaZF;
 
-import okhttp3.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import okio.ByteString
 import org.json.JSONObject
 
-class WebSocketManager {
+interface WebSocketEventListener {
+    fun onConnectionFailed(reason: String)
+}
 
-    var isConnected: Boolean = false
-    private val client = OkHttpClient()
-    private var webSocket: WebSocket? = null
+class WebSocketManager(private val eventListener: WebSocketEventListener): WebSocketListener() {
 
-    fun connect(url: String) {
+    private lateinit var webSocket: WebSocket
+    //agregar esta IP a res/xml/network_security_config.xml
+    private val serverURL = "ws://192.168.68.60:8080"
+
+    fun connect() {
+        val client = OkHttpClient()
+
         val request = Request.Builder()
-            .url(url)
+            .url(serverURL) // Cambia a la URL de tu servidor
             .build()
 
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                println("Conexión abierta")
-                isConnected = true
-            }
+        webSocket = client.newWebSocket(request, this)
+    }
 
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                println("Mensaje recibido: $text")
-            }
+    override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+        println("Conexión establecida")
+    }
 
-            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-                println("Mensaje recibido (binario): ${bytes.hex()}")
-            }
+    override fun onMessage(webSocket: WebSocket, text: String) {
+        println("Mensaje recibido: $text")
+    }
 
-            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                println("Conexión cerrando: $code, razón: $reason")
-                webSocket.close(1000, null)
-            }
+    override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+        println("Mensaje binario recibido: ${bytes.hex()}")
+    }
 
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                println("Conexión cerrada: $code, razón: $reason")
-            }
+    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+        println("Cerrando conexión: $reason")
+        webSocket.close(1000, null)
+    }
 
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                println("Error en la conexión: ${t.message}")
-                isConnected = false
-            }
-        })
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
+        println("Error en la conexión: ${t.message}")
+        eventListener.onConnectionFailed(t.message?: "Error Desconocido")
     }
 
     fun sendMessage(message: JSONObject) {
-        webSocket?.send(message.toString())
+        webSocket.send(message.toString())
     }
 
     fun closeConnection() {
-        webSocket?.close(1000, "Conexión cerrada")
+        webSocket.close(1000, "Conexión cerrada")
     }
 }
