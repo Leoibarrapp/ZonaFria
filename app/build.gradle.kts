@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.vidosaZF"
+    namespace = "com.example.ZonaFria"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.vidosaZF"
+        applicationId = "com.example.ZonaFria"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

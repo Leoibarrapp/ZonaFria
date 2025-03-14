@@ -1,6 +1,5 @@
-package com.example.vidosaZF
+package com.example.ZonaFria
 
-import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -8,7 +7,6 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
@@ -26,7 +24,6 @@ import java.util.Calendar
 import java.util.Locale
 
 import com.android.volley.Request
-import okhttp3.OkHttpClient
 import org.json.JSONException
 import android.widget.Filter
 
@@ -642,7 +639,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         runOnUiThread {
             mostrarMensaje(
                 titulo = "Error",
-                mensaje = "Hubo un error conectandose con el servidor: \n $reason",
+                mensaje = "Hubo un error conectandose con el servidor:\n$reason",
                 botonAceptar = "Reintentar" to { webSocket.connect() },
                 botonCancelar = "Cerrar app" to { finishAffinity() }
             )

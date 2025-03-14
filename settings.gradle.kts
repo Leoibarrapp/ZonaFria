@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "vidosaZF"
+rootProject.name = "ZonaFria"
 include(":app")
  

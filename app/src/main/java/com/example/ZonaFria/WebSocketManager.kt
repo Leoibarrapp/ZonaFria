@@ -1,4 +1,4 @@
-package com.example.vidosaZF;
+package com.example.ZonaFria;
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,7 +15,7 @@ class WebSocketManager(private val eventListener: WebSocketEventListener): WebSo
 
     private lateinit var webSocket: WebSocket
     //agregar esta IP a res/xml/network_security_config.xml
-    private val serverURL = "ws://192.168.68.60:8080"
+    private val serverURL = "ws://172.16.0.3:8080"
 
     fun connect() {
         val client = OkHttpClient()
