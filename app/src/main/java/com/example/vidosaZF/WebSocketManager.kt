@@ -42,6 +42,7 @@ class WebSocketManager(private val eventListener: WebSocketEventListener): WebSo
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
         println("Cerrando conexión: $reason")
         webSocket.close(1000, null)
+        eventListener.onConnectionFailed(reason)
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {

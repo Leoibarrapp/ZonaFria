@@ -8,6 +8,9 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -25,12 +28,13 @@ import java.util.Locale
 import com.android.volley.Request
 import okhttp3.OkHttpClient
 import org.json.JSONException
+import android.widget.Filter
 
 class MainActivity : AppCompatActivity(), WebSocketEventListener {
     private lateinit var webSocket: WebSocketManager
 
     //mapa con los codigos y nombres de los defectos
-//    private val mapaDefectos = Defectos.map
+    private val mapaDefectos = Defectos.map
 
     private var turno: Int = 0
     private var horaActual: Int = 0
@@ -40,11 +44,11 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     //lista de filas que contiene a la lista de celdas
     private lateinit var celdasTabla1: List<List<EditText>>
+    private lateinit var celdasDefectos: List<List<AutoCompleteTextView>>
     private lateinit var celdasTabla2: List<List<EditText>>
 
     private lateinit var horasTVs: List<List<TextView>>
-//    private lateinit var horas1TVs: List<TextView>
-//    private lateinit var horas2TVs: List<TextView>
+    private lateinit var moldesETs: List<EditText>
 
     private lateinit var udsHoraET: EditText
     private lateinit var fechaTV: TextView
@@ -102,22 +106,48 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             listOf(R.id.tv_hora1_tabla2, R.id.tv_hora2_tabla2, R.id.tv_hora3_tabla2, R.id.tv_hora4_tabla2, R.id.tv_hora5_tabla2, R.id.tv_hora6_tabla2, R.id.tv_hora7_tabla2, R.id.tv_hora8_tabla2)
         ).map { tabla -> tabla.map { id -> findViewById(id) } }
 
+        moldesETs = listOf(R.id.molde1, R.id.molde2, R.id.molde3, R.id.molde4, R.id.molde5, R.id.molde6)
+            .map { id ->
+                val celda = findViewById<EditText>(id)
+                celda.tag = resources.getResourceEntryName(id)
+                observarCambiosMoldes(celda)
+                    celda
+            }
+
         // Lista de filas, que a su vez tienen la lista de celdas
         celdasTabla1 = listOf(
-            listOf(R.id.A1_Hrs,R.id.A2_Hrs,R.id.A3_Hrs,R.id.A4_Hrs,R.id.A5_Hrs,R.id.A6_Hrs,R.id.A7_Hrs,R.id.A8_Hrs,R.id.A9_Def1,R.id.A10_Def2,R.id.A11_Def3,R.id.A12_Def4,R.id.A13_Def5,R.id.A14_Def6),
-            listOf(R.id.B1_Hrs,R.id.B2_Hrs,R.id.B3_Hrs,R.id.B4_Hrs,R.id.B5_Hrs,R.id.B6_Hrs,R.id.B7_Hrs,R.id.B8_Hrs,R.id.B9_Def1,R.id.B10_Def2,R.id.B11_Def3,R.id.B12_Def4,R.id.B13_Def5,R.id.B14_Def6),
-            listOf(R.id.C1_Hrs,R.id.C2_Hrs,R.id.C3_Hrs,R.id.C4_Hrs,R.id.C5_Hrs,R.id.C6_Hrs,R.id.C7_Hrs,R.id.C8_Hrs,R.id.C9_Def1,R.id.C10_Def2,R.id.C11_Def3,R.id.C12_Def4,R.id.C13_Def5,R.id.C14_Def6),
-            listOf(R.id.D1_Hrs,R.id.D2_Hrs,R.id.D3_Hrs,R.id.D4_Hrs,R.id.D5_Hrs,R.id.D6_Hrs,R.id.D7_Hrs,R.id.D8_Hrs,R.id.D9_Def1,R.id.D10_Def2,R.id.D11_Def3,R.id.D12_Def4,R.id.D13_Def5,R.id.D14_Def6),
-            listOf(R.id.E1_Hrs,R.id.E2_Hrs,R.id.E3_Hrs,R.id.E4_Hrs,R.id.E5_Hrs,R.id.E6_Hrs,R.id.E7_Hrs,R.id.E8_Hrs,R.id.E9_Def1,R.id.E10_Def2,R.id.E11_Def3,R.id.E12_Def4,R.id.E13_Def5,R.id.E14_Def6),
-            listOf(R.id.F1_Hrs,R.id.F2_Hrs,R.id.F3_Hrs,R.id.F4_Hrs,R.id.F5_Hrs,R.id.F6_Hrs,R.id.F7_Hrs,R.id.F8_Hrs,R.id.F9_Def1,R.id.F10_Def2,R.id.F11_Def3,R.id.F12_Def4,R.id.F13_Def5,R.id.F14_Def6),
-            listOf(R.id.G1_Hrs,R.id.G2_Hrs,R.id.G3_Hrs,R.id.G4_Hrs,R.id.G5_Hrs,R.id.G6_Hrs,R.id.G7_Hrs,R.id.G8_Hrs,R.id.G9_Def1,R.id.G10_Def2,R.id.G11_Def3,R.id.G12_Def4,R.id.G13_Def5,R.id.G14_Def6),
-            listOf(R.id.H1_Hrs,R.id.H2_Hrs,R.id.H3_Hrs,R.id.H4_Hrs,R.id.H5_Hrs,R.id.H6_Hrs,R.id.H7_Hrs,R.id.H8_Hrs,R.id.H9_Def1,R.id.H10_Def2,R.id.H11_Def3,R.id.H12_Def4,R.id.H13_Def5,R.id.H14_Def6)
+            listOf(R.id.A1_Hrs,R.id.A2_Hrs,R.id.A3_Hrs,R.id.A4_Hrs,R.id.A5_Hrs,R.id.A6_Hrs,R.id.A7_Hrs,R.id.A8_Hrs),
+            listOf(R.id.B1_Hrs,R.id.B2_Hrs,R.id.B3_Hrs,R.id.B4_Hrs,R.id.B5_Hrs,R.id.B6_Hrs,R.id.B7_Hrs,R.id.B8_Hrs),
+            listOf(R.id.C1_Hrs,R.id.C2_Hrs,R.id.C3_Hrs,R.id.C4_Hrs,R.id.C5_Hrs,R.id.C6_Hrs,R.id.C7_Hrs,R.id.C8_Hrs),
+            listOf(R.id.D1_Hrs,R.id.D2_Hrs,R.id.D3_Hrs,R.id.D4_Hrs,R.id.D5_Hrs,R.id.D6_Hrs,R.id.D7_Hrs,R.id.D8_Hrs),
+            listOf(R.id.E1_Hrs,R.id.E2_Hrs,R.id.E3_Hrs,R.id.E4_Hrs,R.id.E5_Hrs,R.id.E6_Hrs,R.id.E7_Hrs,R.id.E8_Hrs),
+            listOf(R.id.F1_Hrs,R.id.F2_Hrs,R.id.F3_Hrs,R.id.F4_Hrs,R.id.F5_Hrs,R.id.F6_Hrs,R.id.F7_Hrs,R.id.F8_Hrs),
+            listOf(R.id.G1_Hrs,R.id.G2_Hrs,R.id.G3_Hrs,R.id.G4_Hrs,R.id.G5_Hrs,R.id.G6_Hrs,R.id.G7_Hrs,R.id.G8_Hrs),
+            listOf(R.id.H1_Hrs,R.id.H2_Hrs,R.id.H3_Hrs,R.id.H4_Hrs,R.id.H5_Hrs,R.id.H6_Hrs,R.id.H7_Hrs,R.id.H8_Hrs)
         ).map { fila ->
             fila.map { id ->
                 val celda = findViewById<EditText>(id)
                 celda.tag = resources.getResourceEntryName(id)
                 observarCambiosCeldas(celda)
                     celda // Return the EditText instance
+            }
+        }
+
+        celdasDefectos = listOf(
+            listOf(R.id.A9_Def1,R.id.A10_Def2,R.id.A11_Def3,R.id.A12_Def4,R.id.A13_Def5,R.id.A14_Def6),
+            listOf(R.id.B9_Def1,R.id.B10_Def2,R.id.B11_Def3,R.id.B12_Def4,R.id.B13_Def5,R.id.B14_Def6),
+            listOf(R.id.C9_Def1,R.id.C10_Def2,R.id.C11_Def3,R.id.C12_Def4,R.id.C13_Def5,R.id.C14_Def6),
+            listOf(R.id.D9_Def1,R.id.D10_Def2,R.id.D11_Def3,R.id.D12_Def4,R.id.D13_Def5,R.id.D14_Def6),
+            listOf(R.id.E9_Def1,R.id.E10_Def2,R.id.E11_Def3,R.id.E12_Def4,R.id.E13_Def5,R.id.E14_Def6),
+            listOf(R.id.F9_Def1,R.id.F10_Def2,R.id.F11_Def3,R.id.F12_Def4,R.id.F13_Def5,R.id.F14_Def6),
+            listOf(R.id.G9_Def1,R.id.G10_Def2,R.id.G11_Def3,R.id.G12_Def4,R.id.G13_Def5,R.id.G14_Def6),
+            listOf(R.id.H9_Def1,R.id.H10_Def2,R.id.H11_Def3,R.id.H12_Def4,R.id.H13_Def5,R.id.H14_Def6)
+        ).map { fila ->
+            fila.map { id ->
+                val celda = findViewById<AutoCompleteTextView>(id)
+                celda.tag = resources.getResourceEntryName(id)
+                observarCambiosDefectos(celda)
+                    celda
             }
         }
 
@@ -267,35 +297,40 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
                 horasTVs[1][i].text = horasTurno[i]
             }
 
-//            restablecerTablas()
-
-//            mostrarMensaje("Nuevo Turno")
+            restablecerTablas()
+            mostrarMensaje("Nuevo Turno")
         }
     }
 
     fun restablecerTablas() {
         celdasTabla1.forEach { fila ->
             fila.forEach { celda ->
-                celda.text.clear()
+                celda.text = null
+            }
+        }
+
+        celdasDefectos.forEach { fila ->
+            fila.forEach { celda ->
+                celda.text = null
             }
         }
 
         celdasTabla2.forEach { fila ->
             fila.forEach { celda ->
-                celda.text.clear()
+                celda.text = null
             }
         }
 
         camposObligatorios.forEach { view ->
             if (view is EditText) {
-                view.text.clear()
+                view.text = null
             }
             else if (view is TextView) {
-                view.text = ""
+                view.text = null
             }
         }
 
-        findViewById<EditText>(R.id.et_observaciones).text.clear()
+//        findViewById<EditText>(R.id.et_observaciones).text.clear()
     }
 
 
@@ -305,35 +340,94 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
 
     //Le aplica el listener de texto a las celdas para actualizar los totales de cada hora
-    fun observarCambiosCeldas(celda: EditText) {
-        //si es defecto enviar mensajes al servidor
-        if(celda.tag.toString().contains("Def")) {
-            celda.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: Editable?) {
-                    webSocket.sendMessage(JSONObject().apply {
-                        put("type", "defect")
-                        put("hour", horaActual)
-                        put("tag", celda.tag.toString())
-                        put("data", celda.text.toString())
-                    })
+    fun observarCambiosCeldas(celda: EditText) {         //si no es defecto realizar calculos
+        celda.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val fila = celda.tag.toString().first()
+                calcularUdsTotalesHora(fila)
+            }
+        })
+    }
+
+    fun observarCambiosDefectos(actv: AutoCompleteTextView) {
+        val opcionesDefectos = mapaDefectos.map { (clave, valor) -> "$clave - $valor" }
+
+        val adapter = object : ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_dropdown_item_1line,
+            opcionesDefectos
+        ) {
+            override fun getFilter(): Filter {
+                return object : Filter() {
+                    override fun performFiltering(constraint: CharSequence?): FilterResults {
+                        val resultados = FilterResults()
+                        if (constraint.isNullOrEmpty()) {
+                            // Mostrar todas las opciones si no hay texto ingresado
+                            resultados.values = opcionesDefectos
+                            resultados.count = opcionesDefectos.size
+                        } else {
+                            // Filtrar opciones basándose en la entrada del usuario
+                            val filtro = constraint.toString().lowercase()
+                            val filtrados = mapaDefectos.filter { (clave, valor) ->
+                                clave.lowercase().contains(filtro) || valor.lowercase().contains(filtro)
+                            }.map { (clave, valor) -> "$clave - $valor" }
+                            resultados.values = filtrados
+                            resultados.count = filtrados.size
+                        }
+                        return resultados
+                    }
+
+                    override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+                        clear()
+                        if (results?.values is List<*>) {
+                            @Suppress("UNCHECKED_CAST")
+                            addAll(results.values as List<String>)
+                        }
+                        notifyDataSetChanged()
+                    }
                 }
+            }
+        }
+
+        actv.setDropDownBackgroundResource(R.drawable.dropdown_background)
+        actv.setAdapter(adapter)
+
+        actv.setOnClickListener { actv.showDropDown() }
+
+        // Manejo de selección: solo establecer el código al seleccionar una opción
+        actv.setOnItemClickListener { parent, _, position, _ ->
+            val seleccionado = parent.getItemAtPosition(position).toString()
+            val codigo = seleccionado.substringBefore(" -") // Extraer solo la parte del código
+            val fila = actv.tag.toString().first()
+
+            webSocket.sendMessage(JSONObject().apply {
+                put("type", "defecto")
+                put("hour", obtenerHoraDeFila(fila).toString())
+                put("tag", actv.tag.toString())
+                put("data", codigo)
             })
 
+            actv.setText(codigo)
         }
-        //si no es defecto realizar calculos
-        else {
-            celda.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+    }
 
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val fila: Char = celda.tag.toString().first()
-                    calcularUdsTotalesHora(fila)
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
-        }
+
+    fun observarCambiosMoldes(tv: TextView) {
+        tv.addTextChangedListener(object: TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                webSocket.sendMessage(JSONObject().apply {
+                    put("type", "molde")
+                    put("hour", horaActual.toString())
+                    put("tag", tv.tag.toString())
+                    put("data", tv.text.toString())
+                })
+            }
+
+        })
     }
 
     fun observarCambiosUdsTotalesHora(tv: TextView) {
@@ -358,9 +452,10 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
             //enviar mensaje al servidor
             override fun afterTextChanged(s: Editable?) {
+                val fila = tv.tag.toString().last()
                 webSocket.sendMessage(JSONObject().apply {
-                    put("type", "efficiency")
-                    put("hour", horaActual)
+                    put("type", "eficiencia")
+                    put("hour", obtenerHoraDeFila(fila).toString())
                     put("tag", tv.tag.toString())
                     put("data", tv.text.toString())
                 })
@@ -372,8 +467,10 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         var suma = 0
         val posicionFila = obtenerPosicionDeFila(fila)
 
-        celdasTabla1[posicionFila].forEach { celdaET ->
-            suma += celdaET.text.toString().toIntOrNull() ?: 0
+        celdasTabla1[posicionFila].forEach { celda ->
+            if(celda is EditText) {
+                suma += celda.text.toString().toIntOrNull() ?: 0
+            }
         }
 
         if(suma != 0) {
@@ -381,7 +478,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             calcularEficienciaHora(fila)
         }
         else {
-            udsTotalesHoraTVs[posicionFila].text = ""
+            udsTotalesHoraTVs[posicionFila].text = null
         }
     }
 
@@ -398,7 +495,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         if (suma != 0) {
             udsTotalesTurnoTV.text = suma.toString()
         } else {
-            udsTotalesTurnoTV.text = ""
+            udsTotalesTurnoTV.text = null
         }
     }
 
@@ -415,17 +512,24 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         if (udsHoraGeneral != null && udsTotalesHora != null) {
             eficiencia = (udsTotalesHora.times(100)) / udsHoraGeneral
 
+            var valido = true
             when (eficiencia) {
                 in 0.0..50.0 -> eficienciaTV.setBackgroundResource(R.drawable.red_cell_shape)
                 in 50.0..80.0 -> eficienciaTV.setBackgroundResource(R.drawable.yellow_cell_shape)
                 in 80.0..100.0 -> eficienciaTV.setBackgroundResource(R.drawable.green_cell_shape)
-                else -> eficienciaTV.setBackgroundColor(Color.GRAY)
+                else -> valido = false
             }
 
-            eficienciaTV.text = String.format(Locale.getDefault(),"%.2f", eficiencia)
+            if(valido) {
+                eficienciaTV.text = String.format(Locale.getDefault(), "%.2f%%", eficiencia)
+            }
+            else {
+                mostrarMensaje("Estás excediendo el numero de unidades por hora.")
+                eficienciaTV.text = null
+            }
         }
         else {
-            eficienciaTV.text = ""
+            eficienciaTV.text = null
             eficienciaTV.setBackgroundResource(R.drawable.header_cell_shape)
         }
     }
@@ -435,7 +539,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         var contadorValidos = 0
 
         eficienciaHoraTVs.forEach { tv ->
-            val text = tv.text.toString()
+            val text = tv.text.toString().substringBefore("%")
 
             if(text.isNotEmpty()) {
                 contadorValidos++
@@ -448,7 +552,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             eficienciaTotalTurnoTV.text = String.format(Locale.getDefault(),"%.2f%%", promedio)
         }
         else {
-            eficienciaTotalTurnoTV.text = ""
+            eficienciaTotalTurnoTV.text = null
         }
     }
 
@@ -466,6 +570,14 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         }
     }
 
+    fun obtenerHoraDeFila(charFila: Char): Int {
+        val fila = obtenerPosicionDeFila(charFila)
+        val horaTV = horasTVs[0][fila].text.toString()
+
+        val horaRedoneada = horaTV.substringBefore(':').toInt()
+        return horaRedoneada
+    }
+
     fun verificarCamposObligatorios(): Boolean {
         camposObligatorios.forEach { view ->
             if (view is EditText && view.text.toString().isEmpty()) {
@@ -481,12 +593,15 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     fun enviarDatosTablaUsuario() {
         val casillasTabla1 = celdasTabla1.map { fila ->
             fila.map { et ->
-                val text = et.text.toString()
-                if (text.isNotEmpty() && text.matches(Regex("\\d+"))) {
-                    text.toInt()
-                } else {
-                    0 // O un valor por defecto que prefieras
+                if(et is EditText){
+                    val text = et.text.toString()
+                    if (text.isNotEmpty() && text.matches(Regex("\\d+"))) {
+                        text.toInt()
+                    } else {
+                        0 // O un valor por defecto que prefieras
+                    }
                 }
+
             }}
         val udsPorHora = udsTotalesHoraTVs.map { tv ->
             val text = tv.text.toString()
@@ -527,8 +642,8 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         runOnUiThread {
             mostrarMensaje(
                 titulo = "Error",
-                mensaje = "Hubo un error conectandose con el servidor:\n $reason",
-                botonAceptar = null,
+                mensaje = "Hubo un error conectandose con el servidor: \n $reason",
+                botonAceptar = "Reintentar" to { webSocket.connect() },
                 botonCancelar = "Cerrar app" to { finishAffinity() }
             )
         }

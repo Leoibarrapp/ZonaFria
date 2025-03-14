@@ -424,6 +424,7 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/molde1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -433,6 +434,7 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/molde2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -442,6 +444,7 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/molde3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -451,6 +454,7 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/molde4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -460,6 +464,7 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/molde5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -469,6 +474,7 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/molde6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -578,7 +584,7 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/A9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -586,9 +592,10 @@
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
                     android:padding="2sp"
+                    android:dropDownWidth="match_parent"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/A10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -596,9 +603,10 @@
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
                     android:padding="2sp"
+                    android:dropDownWidth="match_parent"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/A11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -606,9 +614,10 @@
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
                     android:padding="2sp"
+                    android:dropDownWidth="match_parent"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/A12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -616,9 +625,10 @@
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
                     android:padding="2sp"
+                    android:dropDownWidth="match_parent"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/A13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -626,9 +636,10 @@
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
                     android:padding="2sp"
+                    android:dropDownWidth="match_parent"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/A14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -636,6 +647,7 @@
                     android:background="@drawable/cell_shape"
                     android:gravity="center"
                     android:padding="2sp"
+                    android:dropDownWidth="match_parent"
                     android:textSize="14sp" />
             </TableRow>
 
@@ -739,62 +751,68 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/B9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/B10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/B11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/B12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/B13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/B14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
@@ -900,62 +918,68 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/C9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/C10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/C11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/C12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/C13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/C14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
@@ -1061,62 +1085,68 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/D9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/D10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/D11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/D12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/D13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/D14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
@@ -1222,62 +1252,68 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/E9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/E10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/E11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/E12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/E13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/E14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
@@ -1383,62 +1419,68 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/F9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/F10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/F11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/F12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/F13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/F14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
@@ -1544,66 +1586,72 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/G9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/G10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/G11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/G12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/G13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/G14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
-                
+
             </TableRow>
 
             <TableRow>
@@ -1706,62 +1754,68 @@
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/H9_Def1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/H10_Def2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/H11_Def3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/H12_Def4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/H13_Def5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/H14_Def6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/cell_shape"
+                    android:dropDownWidth="match_parent"
                     android:gravity="center"
                     android:padding="2sp"
                     android:textSize="14sp" />
@@ -2399,6 +2453,7 @@
 
                 <EditText
                     android:id="@+id/et_observaciones"
+                    android:spinnerMode="dropdown"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="10dp"
