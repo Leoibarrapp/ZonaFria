@@ -1,5 +1,6 @@
 package com.example.ZonaFria
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -26,8 +27,12 @@ import java.util.Locale
 import com.android.volley.Request
 import org.json.JSONException
 import android.widget.Filter
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity(), WebSocketEventListener {
+    var iniciandoApp = true
+
     private lateinit var webSocket: WebSocketManager
 
     //mapa con los codigos y nombres de los defectos
@@ -35,7 +40,6 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     private var turno: Int = 0
     private var horaActual: Int = 0
-
 
     private lateinit var camposObligatorios: List<View>
 
@@ -62,15 +66,10 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     // Handler y Runnable para actualizar el turno cada minuto
     private val handler = Handler(Looper.getMainLooper())
-    private val runnableActualizarTurno = object : Runnable {
-        override fun run() {
-            actualizarTurno()
-            // Programa la siguiente ejecución del Runnable en 1 minuto (60 * 1000 milisegundos -> 60 segundos)
-            handler.postDelayed(
-                this,
-                60 * 1000
-            )
-        }
+
+    private val runnableInactividad = Runnable {
+        mostrarMensaje("Inactividad")
+        reiniciarTemporizadorInactividad()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,6 +78,13 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
         webSocket = WebSocketManager(this)
         webSocket.connect()
+
+        val rootLayout = findViewById<View>(R.id.root) // ID del diseño raíz
+        rootLayout.setOnTouchListener { _, _ ->
+            reiniciarTemporizadorInactividad()
+            rootLayout.performClick()
+            true
+        }
 
         fechaTV = findViewById(R.id.tv_fecha)
 
@@ -99,9 +105,15 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
         // TextViews de las horas
         horasTVs = listOf(
-            listOf(R.id.tv_hora1_tabla1, R.id.tv_hora2_tabla1, R.id.tv_hora3_tabla1, R.id.tv_hora4_tabla1, R.id.tv_hora5_tabla1, R.id.tv_hora6_tabla1, R.id.tv_hora7_tabla1, R.id.tv_hora8_tabla1),
-            listOf(R.id.tv_hora1_tabla2, R.id.tv_hora2_tabla2, R.id.tv_hora3_tabla2, R.id.tv_hora4_tabla2, R.id.tv_hora5_tabla2, R.id.tv_hora6_tabla2, R.id.tv_hora7_tabla2, R.id.tv_hora8_tabla2)
-        ).map { tabla -> tabla.map { id -> findViewById(id) } }
+            listOf(R.id.horaA_tabla1_tv, R.id.horaB_tabla1_tv, R.id.horaC_tabla1_tv, R.id.horaD_tabla1_tv, R.id.horaE_tabla1_tv, R.id.horaF_tabla1_tv, R.id.horaG_tabla1_tv, R.id.horaH_tabla1_tv),
+            listOf(R.id.horaA_tabla2_tv, R.id.horaB_tabla2_tv, R.id.horaC_tabla2_tv, R.id.horaD_tabla2_tv, R.id.horaE_tabla2_tv, R.id.horaF_tabla2_tv, R.id.horaG_tabla2_tv, R.id.horaH_tabla2_tv)
+        ).map { tabla ->
+            tabla.map { id ->
+                val celda = findViewById<TextView>(id)
+                celda.tag = resources.getResourceEntryName(id)
+                    celda
+            }
+        }
 
         moldesETs = listOf(R.id.molde1, R.id.molde2, R.id.molde3, R.id.molde4, R.id.molde5, R.id.molde6)
             .map { id ->
@@ -126,7 +138,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
                 val celda = findViewById<EditText>(id)
                 celda.tag = resources.getResourceEntryName(id)
                 observarCambiosCeldas(celda)
-                    celda // Return the EditText instance
+                    celda
             }
         }
 
@@ -175,6 +187,14 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
         camposObligatorios = listOf(R.id.et_grupo, R.id.et_linea, R.id.et_molde, R.id.et_velocidad, R.id.et_tiempo_de_archa, R.id.et_obj_de_linea, R.id.et_uds_hora, R.id.et_uds_turno, R.id.et_firma)
             .map { id -> findViewById<View>(id) } + udsTotalesHoraTVs + udsTotalesTurnoTV + eficienciaHoraTVs + eficienciaTotalTurnoTV
+        camposObligatorios.forEach { celda ->
+            when (celda) {
+                is TextView -> celda.text = null
+                is EditText -> celda.text = null
+                is AutoCompleteTextView -> celda.text = null
+                else -> throw IllegalArgumentException("Tipo de vista no soportado: ${celda.javaClass.simpleName}")
+            }
+        }
 
         btnGuardar.setOnClickListener{
             if (verificarCamposObligatorios()) {
@@ -186,11 +206,17 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         }
 
         queue = Volley.newRequestQueue(this) // Initialize the request queue here
-        handler.post(runnableActualizarTurno)
+
+        actualizarTurno()
+        reiniciarTemporizadorInactividad()
+        bloquearFilasDesde(obtenerFilaDeHora(horaActual))
+
+        iniciandoApp = false
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        handler.removeCallbacks(runnableInactividad)
         webSocket.closeConnection()
     }
 
@@ -198,17 +224,19 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
 
     fun mostrarMensaje(mensaje: String) {
-        val builder = AlertDialog.Builder(this)
-        builder.setMessage(mensaje)
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-            }
+        runOnUiThread {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage(mensaje)
+                .setPositiveButton("OK") { dialog, _ ->
+                    dialog.dismiss()
+                }
 
-        val alertDialog = builder.create()
-        alertDialog.show()
+            val alertDialog = builder.create()
+            alertDialog.show()
 
-        val color = ContextCompat.getColor(this, R.color.primary)
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(color)
+            val color = ContextCompat.getColor(this, R.color.primary)
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(color)
+        }
     }
 
 
@@ -218,49 +246,46 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         botonAceptar: Pair<String, () -> Unit>? = null,
         botonCancelar: Pair<String, () -> Unit>? = null
     ) {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle(titulo)
-        builder.setMessage(mensaje)
+        runOnUiThread {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle(titulo)
+            builder.setMessage(mensaje)
 
-        if(botonAceptar != null) {
-            builder.setPositiveButton(botonAceptar.first) { dialog, _ ->
-                botonAceptar.second() // Ejecuta la función asociada
-                dialog.dismiss()
+            if (botonAceptar != null) {
+                builder.setPositiveButton(botonAceptar.first) { dialog, _ ->
+                    botonAceptar.second() // Ejecuta la función asociada
+                    dialog.dismiss()
+                }
             }
-        }
 
-        if(botonCancelar != null) {
-            builder.setNegativeButton(botonCancelar.first) { dialog, _ ->
-                botonCancelar.second() // Ejecuta la función asociada
-                dialog.dismiss()
+            if (botonCancelar != null) {
+                builder.setNegativeButton(botonCancelar.first) { dialog, _ ->
+                    botonCancelar.second() // Ejecuta la función asociada
+                    dialog.dismiss()
+                }
             }
-        }
 
-        val alertDialog = builder.create()
-        alertDialog.show()
-        if(botonCancelar != null){
-            alertDialog.setCancelable(false)
-        }
+            val alertDialog = builder.create()
+            alertDialog.show()
+            if (botonCancelar != null) {
+                alertDialog.setCancelable(false)
+            }
 
-        val colorAceptar = ContextCompat.getColor(this, R.color.primary)
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(colorAceptar)
-        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.RED)
+            val colorAceptar = ContextCompat.getColor(this, R.color.primary)
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(colorAceptar)
+            alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.RED)
+        }
     }
 
 
 
     // Obtiene la hora actual
     fun obtenerHora(): Int {
-        val hora = Calendar.getInstance()[Calendar.HOUR_OF_DAY]
-        horaActual = hora
-        // Muestra la hora actual en el campo de texto et_fecha
-        return hora
+        return Calendar.getInstance()[Calendar.HOUR_OF_DAY]
     }
 
     // Determina el turno basado en la hora actual
-    fun decidirTurno(): Int {
-        val hora = obtenerHora()
-
+    fun decidirTurno(hora: Int): Int {
         return when (hora) {
             in 7..14 -> 1
             in 15..22 -> 2
@@ -271,13 +296,14 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     // Actualiza los turnos y los TextViews correspondientes al cambiar de hora
     fun actualizarTurno() {
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val currentDate = dateFormat.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
-        fechaTV.text = currentDate
+        val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val fechaActual = formatoFecha.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
+        fechaTV.text = fechaActual
 
-        val nuevoTurno = decidirTurno()
+        val horaDelDia = obtenerHora()
+        val nuevoTurno = decidirTurno(horaDelDia)
 
-        //verifica si el turno debe cambiar o no
+        //hay cambio de turno
         if(turno != nuevoTurno){
             turno = nuevoTurno
 
@@ -294,12 +320,57 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
                 horasTVs[1][i].text = horasTurno[i]
             }
 
-            restablecerTablas()
-            mostrarMensaje("Nuevo Turno")
+            if(!iniciandoApp) {
+                restablecerTablas()
+                mostrarMensaje("Nuevo Turno")
+                bloquearFilasDesde('A')
+            }
+        } else {    //no hay cambio de turno, solo actualiza las horas
+            val fila = obtenerFilaDeHora(horaDelDia)
+            desbloquearFila(fila)
+        }
+
+        horaActual = horaDelDia
+        handler.postDelayed({ actualizarTurno() }, 1000 * 60)
+    }
+
+    fun bloquearFilasDesde(fila: Char) {
+        val posicion = obtenerPosicionDeFila(fila)
+        val aBloquear: MutableList<View> = mutableListOf()
+
+        for(i in posicion+1..7) {
+            aBloquear += celdasTabla1[i] + celdasTabla2[i] + celdasDefectos[i]
+        }
+
+        aBloquear.forEach { celda ->
+            celda.isEnabled = false
+            celda.setBackgroundResource(R.drawable.disabled_cell)
+        }
+    }
+
+    fun desbloquearFila(fila: Char) {
+        val posicion = obtenerPosicionDeFila(fila)
+        val aDesloquear = celdasTabla1[posicion] + celdasTabla2[posicion] + celdasDefectos[posicion]
+
+        aDesloquear.forEach { celda ->
+            celda.isEnabled = true
+            celda.setBackgroundResource(R.drawable.cell_shape)
         }
     }
 
     fun restablecerTablas() {
+        moldesETs.forEach { tv ->
+            tv.text = null
+        }
+
+        camposObligatorios.forEach { view ->
+            if (view is EditText) {
+                view.text = null
+            } else if (view is TextView) {
+                view.text = null
+            }
+        }
+
         celdasTabla1.forEach { fila ->
             fila.forEach { celda ->
                 celda.text = null
@@ -318,16 +389,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             }
         }
 
-        camposObligatorios.forEach { view ->
-            if (view is EditText) {
-                view.text = null
-            }
-            else if (view is TextView) {
-                view.text = null
-            }
-        }
-
-//        findViewById<EditText>(R.id.et_observaciones).text.clear()
+        findViewById<EditText>(R.id.et_observaciones).text.clear()
     }
 
 
@@ -344,6 +406,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             override fun afterTextChanged(s: Editable?) {
                 val fila = celda.tag.toString().first()
                 calcularUdsTotalesHora(fila)
+                reiniciarTemporizadorInactividad()
             }
         })
     }
@@ -398,15 +461,10 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             val seleccionado = parent.getItemAtPosition(position).toString()
             val codigo = seleccionado.substringBefore(" -") // Extraer solo la parte del código
             val fila = actv.tag.toString().first()
-
-            webSocket.sendMessage(JSONObject().apply {
-                put("type", "defecto")
-                put("hour", obtenerHoraDeFila(fila).toString())
-                put("tag", actv.tag.toString())
-                put("data", codigo)
-            })
-
             actv.setText(codigo)
+
+            enviarAlWebSocket("defecto", obtenerHoraDeFila(fila).toString(), actv)
+            reiniciarTemporizadorInactividad()
         }
     }
 
@@ -416,12 +474,8 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                webSocket.sendMessage(JSONObject().apply {
-                    put("type", "molde")
-                    put("hour", horaActual.toString())
-                    put("tag", tv.tag.toString())
-                    put("data", tv.text.toString())
-                })
+                enviarAlWebSocket("molde", horaActual.toString(), tv)
+                reiniciarTemporizadorInactividad()
             }
 
         })
@@ -430,13 +484,13 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     fun observarCambiosUdsTotalesHora(tv: TextView) {
         tv.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
                 val fila = tv.tag.toString().last()
                 calcularEficienciaHora(fila)
                 calcularUdsTotalesTurno()
+                reiniciarTemporizadorInactividad()
             }
-            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
@@ -450,12 +504,8 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             //enviar mensaje al servidor
             override fun afterTextChanged(s: Editable?) {
                 val fila = tv.tag.toString().last()
-                webSocket.sendMessage(JSONObject().apply {
-                    put("type", "eficiencia")
-                    put("hour", obtenerHoraDeFila(fila).toString())
-                    put("tag", tv.tag.toString())
-                    put("data", tv.text.toString())
-                })
+                enviarAlWebSocket("eficiencia", obtenerHoraDeFila(fila).toString(), tv)
+                reiniciarTemporizadorInactividad()
             }
         })
     }
@@ -522,6 +572,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             }
             else {
                 mostrarMensaje("Estás excediendo el numero de unidades por hora.")
+                eficienciaTV.setBackgroundResource(R.drawable.yellow_cell_shape)
                 eficienciaTV.text = null
             }
         }
@@ -569,10 +620,24 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     fun obtenerHoraDeFila(charFila: Char): Int {
         val fila = obtenerPosicionDeFila(charFila)
-        val horaTV = horasTVs[0][fila].text.toString()
+        val horaTV = horasTVs[0][fila]
 
-        val horaRedoneada = horaTV.substringBefore(':').toInt()
+        val horaRedoneada = horaTV.text.toString().substringBefore(':').toInt()
         return horaRedoneada
+    }
+
+    fun obtenerFilaDeHora(hora: Int): Char {
+        return when (hora) {
+            7, 15, 23 -> 'A'
+            8, 16, 0 -> 'B'
+            9, 17, 1 -> 'C'
+            10, 18, 2 -> 'D'
+            11, 19, 3 -> 'E'
+            12, 20, 4 -> 'F'
+            13, 21, 5 -> 'G'
+            14, 22, 6 -> 'H'
+            else -> throw IllegalArgumentException("Hora inválida: $hora")
+        }
     }
 
     fun verificarCamposObligatorios(): Boolean {
@@ -635,14 +700,64 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     }
 
-    override fun onConnectionFailed(reason: String) {
-        runOnUiThread {
-            mostrarMensaje(
-                titulo = "Error",
-                mensaje = "Hubo un error conectandose con el servidor:\n$reason",
-                botonAceptar = "Reintentar" to { webSocket.connect() },
-                botonCancelar = "Cerrar app" to { finishAffinity() }
-            )
+    fun enviarAlWebSocket(tipo: String, hora: String, view: View) {
+        val mensaje = JSONObject().apply {
+            put("type", tipo)
+            put("hour", hora)
         }
+
+        if (view is TextView && !view.text.isNullOrEmpty()) {
+            mensaje.apply {
+                put("tag", view.tag.toString())
+                put("data", view.text.toString())
+            }
+            webSocket.sendMessage(mensaje)
+
+        } else if (view is AutoCompleteTextView && !view.text.isNullOrEmpty()) {
+            mensaje.apply {
+                put("tag", view.tag.toString())
+                put("data", view.text.toString())
+            }
+            webSocket.sendMessage(mensaje)
+        }
+    }
+
+    fun enviarDatosTabla(){
+        var mensaje: String = ""
+
+        moldesETs.forEach { celda ->
+            enviarAlWebSocket("molde", horaActual.toString(), celda)
+            mensaje += celda.text.toString()
+        }
+
+        celdasDefectos.forEach { fila ->
+            fila.forEach { celda ->
+                enviarAlWebSocket("defecto", obtenerHoraDeFila(celda.tag.toString().first()).toString(), celda)
+                mensaje += celda.text.toString()
+            }
+        }
+
+        eficienciaHoraTVs.forEach { tv ->
+            enviarAlWebSocket("eficiencia", obtenerHoraDeFila(tv.tag.toString().last()).toString(), tv)
+            mensaje += tv.text.toString()
+        }
+    }
+
+    override fun onConnectionFailed(reason: String) {
+        mostrarMensaje(
+            titulo = "Error",
+            mensaje = "Hubo un error conectandose con el servidor:\n$reason",
+            botonAceptar = "Reintentar" to { lifecycleScope.launch { webSocket.connect() } },
+            botonCancelar = "Cerrar app" to { finishAffinity() }
+        )
+    }
+
+    override fun onConnectedSuccess() {
+//        enviarDatosTabla()
+    }
+
+    private fun reiniciarTemporizadorInactividad() {
+        handler.removeCallbacks(runnableInactividad)
+        handler.postDelayed(runnableInactividad, 1000 * 60 * 5) //5 minutos
     }
 }

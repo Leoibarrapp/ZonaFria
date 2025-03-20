@@ -6,6 +6,8 @@
     android:layout_height="match_parent">
 
     <RelativeLayout
+        android:id="@+id/root"
+
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -487,7 +489,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora1_tabla1"
+                    android:id="@+id/horaA_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -654,7 +656,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora2_tabla1"
+                    android:id="@+id/horaB_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -821,7 +823,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora3_tabla1"
+                    android:id="@+id/horaC_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -988,7 +990,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora4_tabla1"
+                    android:id="@+id/horaD_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -1155,7 +1157,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora5_tabla1"
+                    android:id="@+id/horaE_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -1322,7 +1324,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora6_tabla1"
+                    android:id="@+id/horaF_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -1489,7 +1491,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora7_tabla1"
+                    android:id="@+id/horaG_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -1657,7 +1659,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora8_tabla1"
+                    android:id="@+id/horaH_tabla1_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -1866,7 +1868,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora1_tabla2"
+                    android:id="@+id/horaA_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -1929,7 +1931,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora2_tabla2"
+                    android:id="@+id/horaB_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -1992,7 +1994,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora3_tabla2"
+                    android:id="@+id/horaC_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -2055,7 +2057,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora4_tabla2"
+                    android:id="@+id/horaD_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -2118,7 +2120,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora5_tabla2"
+                    android:id="@+id/horaE_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -2181,7 +2183,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora6_tabla2"
+                    android:id="@+id/horaF_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -2244,7 +2246,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora7_tabla2"
+                    android:id="@+id/horaG_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"
@@ -2307,7 +2309,7 @@
             <TableRow>
 
                 <TextView
-                    android:id="@+id/tv_hora8_tabla2"
+                    android:id="@+id/horaH_tabla2_tv"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/header_cell_shape"

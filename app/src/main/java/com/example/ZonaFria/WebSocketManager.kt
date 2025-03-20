@@ -9,15 +9,16 @@ import org.json.JSONObject
 
 interface WebSocketEventListener {
     fun onConnectionFailed(reason: String)
+    fun onConnectedSuccess()
 }
 
 class WebSocketManager(private val eventListener: WebSocketEventListener): WebSocketListener() {
 
     private lateinit var webSocket: WebSocket
     //agregar esta IP a res/xml/network_security_config.xml
-    private val serverURL = "ws://172.16.0.3:8080"
+    private val serverURL = "ws://172.16.0.213:8080"
 
-    fun connect() {
+     fun connect() {
         val client = OkHttpClient()
 
         val request = Request.Builder()
@@ -29,6 +30,7 @@ class WebSocketManager(private val eventListener: WebSocketEventListener): WebSo
 
     override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
         println("Conexión establecida")
+        eventListener.onConnectedSuccess()
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
