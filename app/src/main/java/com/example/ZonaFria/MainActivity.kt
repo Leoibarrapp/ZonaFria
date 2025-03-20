@@ -68,8 +68,11 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     private val handler = Handler(Looper.getMainLooper())
 
     private val runnableInactividad = Runnable {
-        mostrarMensaje("Inactividad")
-        reiniciarTemporizadorInactividad()
+        mostrarMensaje(
+            titulo = "¡Alerta!",
+            mensaje = "Has estado inactivo durante 5 minutos.",
+            botonAceptar = "OK" to { reiniciarTemporizadorInactividad() }
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -223,27 +226,27 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
 
 
-    fun mostrarMensaje(mensaje: String) {
-        runOnUiThread {
-            val builder = AlertDialog.Builder(this)
-            builder.setMessage(mensaje)
-                .setPositiveButton("OK") { dialog, _ ->
-                    dialog.dismiss()
-                }
-
-            val alertDialog = builder.create()
-            alertDialog.show()
-
-            val color = ContextCompat.getColor(this, R.color.primary)
-            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(color)
-        }
-    }
+//    fun mostrarMensaje(mensaje: String) {
+//        runOnUiThread {
+//            val builder = AlertDialog.Builder(this)
+//            builder.setMessage(mensaje)
+//                .setPositiveButton("OK") { dialog, _ ->
+//                    dialog.dismiss()
+//                }
+//
+//            val alertDialog = builder.create()
+//            alertDialog.show()
+//
+//            val color = ContextCompat.getColor(this, R.color.primary)
+//            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(color)
+//        }
+//    }
 
 
     fun mostrarMensaje(
-        titulo: String? = null,
         mensaje: String,
-        botonAceptar: Pair<String, () -> Unit>? = null,
+        titulo: String? = null,
+        botonAceptar: Pair<String, () -> Unit>? = "OK" to { },
         botonCancelar: Pair<String, () -> Unit>? = null
     ) {
         runOnUiThread {
@@ -747,7 +750,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         mostrarMensaje(
             titulo = "Error",
             mensaje = "Hubo un error conectandose con el servidor:\n$reason",
-            botonAceptar = "Reintentar" to { lifecycleScope.launch { webSocket.connect() } },
+            botonAceptar = "Reintentar" to { webSocket.connect() },
             botonCancelar = "Cerrar app" to { finishAffinity() }
         )
     }
