@@ -10,6 +10,7 @@ import org.json.JSONObject
 interface WebSocketEventListener {
     fun onConnectionFailed(reason: String)
     fun onConnectedSuccess()
+    fun onError(message: String)
 }
 
 class WebSocketManager(private val eventListener: WebSocketEventListener): WebSocketListener() {
@@ -35,6 +36,10 @@ class WebSocketManager(private val eventListener: WebSocketEventListener): WebSo
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         println("Mensaje recibido: $text")
+
+        //if(text.contains("Error")) {
+            eventListener.onError(text)
+        //}
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {

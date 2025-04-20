@@ -51,15 +51,27 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     private lateinit var horasTVs: List<List<TextView>>
     private lateinit var moldesETs: List<EditText>
 
-    private lateinit var udsHoraET: EditText
-    private lateinit var fechaTV: TextView
-
     private lateinit var udsTotalesHoraTVs: List<TextView>
     private lateinit var udsTotalesTurnoTV: TextView
     private lateinit var eficienciaHoraTVs: List<TextView>
     private lateinit var eficienciaTotalTurnoTV: TextView
 
     private lateinit var btnGuardar: Button
+
+    private lateinit var fechaTV: TextView
+    private lateinit var lineaET: EditText
+    private lateinit var moldeET: EditText
+    private lateinit var velocidadET: EditText
+    private lateinit var tiempoDeArchaET: EditText
+    private lateinit var objDeLineaET: EditText
+    private lateinit var udsHoraET: EditText
+    private lateinit var udsTurnoET: EditText
+
+    private lateinit var grupoET: EditText
+    private lateinit var firmaET: EditText
+    private lateinit var observacionesET: EditText
+
+    private var detallesArray: JSONArray = JSONArray()
 
     private val serverUrl = "http://192.168.68.60:8080"
     private lateinit var queue: com.android.volley.RequestQueue
@@ -188,8 +200,20 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
                     eficienciaHora
             }
 
-        camposObligatorios = listOf(R.id.et_grupo, R.id.et_linea, R.id.et_molde, R.id.et_velocidad, R.id.et_tiempo_de_archa, R.id.et_obj_de_linea, R.id.et_uds_hora, R.id.et_uds_turno, R.id.et_firma)
-            .map { id -> findViewById<View>(id) } + udsTotalesHoraTVs + udsTotalesTurnoTV + eficienciaHoraTVs + eficienciaTotalTurnoTV
+        grupoET = findViewById(R.id.et_grupo)
+        lineaET = findViewById(R.id.et_linea)
+        moldeET = findViewById(R.id.et_molde)
+        velocidadET = findViewById(R.id.et_velocidad)
+        tiempoDeArchaET = findViewById(R.id.et_tiempo_de_archa)
+        objDeLineaET = findViewById(R.id.et_obj_de_linea)
+        udsHoraET = findViewById(R.id.et_uds_hora)
+        udsTurnoET = findViewById(R.id.et_uds_turno)
+        firmaET = findViewById(R.id.et_firma)
+        observacionesET = findViewById(R.id.et_observaciones)
+
+        camposObligatorios = listOf(grupoET, lineaET, moldeET, velocidadET, tiempoDeArchaET, objDeLineaET, udsHoraET, udsTurnoET, firmaET)
+//                udsTotalesHoraTVs + udsTotalesTurnoTV + eficienciaHoraTVs + eficienciaTotalTurnoTV
+
         camposObligatorios.forEach { celda ->
             when (celda) {
                 is TextView -> celda.text = null
@@ -201,7 +225,8 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
         btnGuardar.setOnClickListener{
             if (verificarCamposObligatorios()) {
-                enviarDatosTablaUsuario()
+//                enviarDatosTablaUsuario()
+                guardarEnBD()
             }
             else {
                 mostrarMensaje("Por favor, complete todos los campos obligatorios.")
@@ -253,6 +278,10 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             val builder = AlertDialog.Builder(this)
             builder.setTitle(titulo)
             builder.setMessage(mensaje)
+
+//            if(titulo == "Error") {
+//                builder.setTitle("<font color='#FF0000'>$titulo</font>")
+//            }
 
             if (botonAceptar != null) {
                 builder.setPositiveButton(botonAceptar.first) { dialog, _ ->
@@ -324,6 +353,9 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             }
 
             if(!iniciandoApp) {
+                guardarEnBD()
+                detallesArray = JSONArray()
+
                 restablecerTablas()
                 mostrarMensaje("Nuevo Turno")
                 bloquearFilasDesde('A')
@@ -644,14 +676,14 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     }
 
     fun verificarCamposObligatorios(): Boolean {
-        camposObligatorios.forEach { view ->
-            if (view is EditText && view.text.toString().isEmpty()) {
-                return false
-            }
-            else if (view is TextView && view.text.toString().isEmpty()) {
-                return false
-            }
-        }
+//        camposObligatorios.forEach { view ->
+//            if (view is EditText && view.text.toString().isEmpty()) {
+//                return false
+//            }
+//            else if (view is TextView && view.text.toString().isEmpty()) {
+//                return false
+//            }
+//        }
         return true
     }
 
@@ -703,10 +735,10 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     }
 
-    fun enviarAlWebSocket(tipo: String, hora: String, view: View) {
+    fun enviarAlWebSocket(tipo: String, horaFila: String, view: View) {
         val mensaje = JSONObject().apply {
             put("type", tipo)
-            put("hour", hora)
+            put("hour", horaFila)
         }
 
         if (view is TextView && !view.text.isNullOrEmpty()) {
@@ -722,6 +754,55 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
                 put("data", view.text.toString())
             }
             webSocket.sendMessage(mensaje)
+        }
+    }
+
+    fun guardarEnBD() {
+
+        val fila = obtenerFilaDeHora(horaActual)
+        val posicion = obtenerPosicionDeFila(fila)
+
+        val detalleTurno = JSONObject().apply {
+            put("hora", horaActual.toString()+":00")
+            put("paleta_por_hora", "0")                                                                                      //TODO: agregarPaleta
+            celdasTabla1[posicion].forEachIndexed { i, celda -> put("produccion_por_hora_${i+1}", celda.text.toString()) }
+            celdasDefectos[posicion].forEachIndexed { i, defecto -> put("defecto_por_hora_${i+1}", defecto.text.toString()) }
+            put("temple", "POR DEFINIR")                                                                                               //TODO: agregarTemple
+            put("total_uds", udsTotalesHoraTVs[posicion].text.toString())
+            put("eficiencia", eficienciaHoraTVs[posicion].text.toString().substringBefore("%"))
+            put("id_turno", turno.toString())
+        }
+
+        detallesArray = JSONArray().apply { put(detalleTurno) }
+
+        val turno = JSONObject().apply {
+            put("observaciones", observacionesET.text.toString())
+            put("operador", firmaET.text.toString())
+            put("unidades_totales", udsTotalesTurnoTV.text.toString())
+            put("eficiencia_total", eficienciaTotalTurnoTV.text.toString().substringBefore("%"))
+            moldesETs.forEachIndexed { i, molde -> put("moldeSec${i+1}", molde.text.toString()) }
+
+            put("detalle_por_hora", detallesArray)
+        }
+
+        val mensaje = JSONObject().apply {
+            put("type", "bd")
+
+            put("fecha", fechaTV.text.toString())
+            put("linea", lineaET.text.toString())
+            put("molde", moldeET.text.toString())
+            put("velocidad", velocidadET.text.toString())
+            put("tiempo_de_archa", tiempoDeArchaET.text.toString())
+            put("obj_de_linea", objDeLineaET.text.toString())
+            put("uds_por_hora", udsHoraET.text.toString())
+            put("uds_por_turno", udsTurnoET.text.toString())
+            put("turno", turno)
+        }
+
+        try {
+            webSocket.sendMessage(mensaje)
+        } catch (e: JSONException) {
+            mostrarMensaje("Error al crear JSON: ${e.message}")
         }
     }
 
@@ -757,6 +838,13 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
     override fun onConnectedSuccess() {
 //        enviarDatosTabla()
+    }
+
+    override fun onError(message: String) {
+        mostrarMensaje(
+            titulo = "Error",
+            mensaje = "Hubo un error enviando la información a la Base de Datos:\n$message"
+        )
     }
 
     private fun reiniciarTemporizadorInactividad() {
