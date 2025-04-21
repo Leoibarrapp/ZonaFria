@@ -30,6 +30,7 @@ import android.widget.Filter
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
 
+
 class MainActivity : AppCompatActivity(), WebSocketEventListener {
     var iniciandoApp = true
 
@@ -225,8 +226,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
         btnGuardar.setOnClickListener{
             if (verificarCamposObligatorios()) {
-//                enviarDatosTablaUsuario()
-                guardarEnBD()
+                lifecycleScope.launch { guardarEnBD() }
             }
             else {
                 mostrarMensaje("Por favor, complete todos los campos obligatorios.")
@@ -235,7 +235,8 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
         queue = Volley.newRequestQueue(this) // Initialize the request queue here
 
-        actualizarTurno()
+        lifecycleScope.launch { actualizarTurno() }
+
         reiniciarTemporizadorInactividad()
         bloquearFilasDesde(obtenerFilaDeHora(horaActual))
 
@@ -327,46 +328,56 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     }
 
     // Actualiza los turnos y los TextViews correspondientes al cambiar de hora
-    fun actualizarTurno() {
-        val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val fechaActual = formatoFecha.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
-        fechaTV.text = fechaActual
+    suspend fun actualizarTurno() {
+        while(true) {
+            val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val fechaActual =
+                formatoFecha.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
+            fechaTV.text = fechaActual
 
-        val horaDelDia = obtenerHora()
-        val nuevoTurno = decidirTurno(horaDelDia)
+            val horaDelDia = obtenerHora()
+            val nuevoTurno = decidirTurno(horaDelDia)
 
-        //hay cambio de turno
-        if(turno != nuevoTurno){
-            turno = nuevoTurno
+            //hay cambio de turno
+            if (turno != nuevoTurno) {
+                turno = nuevoTurno
 
-            val horasTurno = when (turno) {
-                1 -> listOf("7:00 am", "8:00 am", "9:00 am", "10:00 am", "11:00 am", "12:00 pm", "1:00 pm", "2:00 pm")
-                2 -> listOf("3:00 pm", "4:00 pm", "5:00 pm", "6:00 pm", "7:00 pm", "8:00 pm", "9:00 pm", "10:00 pm")
-                3 -> listOf("11:00 pm", "12:00 am", "1:00 am", "2:00 am", "3:00 am", "4:00 am", "5:00 am", "6:00 am")
-                else -> throw IllegalArgumentException("Turno inválido: $turno")
+                val horasTurno = when (turno) {
+                    1 -> listOf("7:00 am", "8:00 am", "9:00 am", "10:00 am", "11:00 am", "12:00 pm", "1:00 pm", "2:00 pm")
+                    2 -> listOf("3:00 pm", "4:00 pm", "5:00 pm", "6:00 pm", "7:00 pm", "8:00 pm", "9:00 pm", "10:00 pm")
+                    3 -> listOf("11:00 pm", "12:00 am", "1:00 am", "2:00 am", "3:00 am", "4:00 am", "5:00 am", "6:00 am")
+                    else -> throw IllegalArgumentException("Turno inválido: $turno")
+                }
+
+                // Actualiza los TextViews con las horas correspondientes al turno
+                for (i in 0..7) {
+                    horasTVs[0][i].text = horasTurno[i]
+                    horasTVs[1][i].text = horasTurno[i]
+                }
+
+                if (!iniciandoApp) {
+                    detallesArray = JSONArray()
+
+                    withContext(Dispatchers.IO) {
+                        guardarEnBD()
+                    }
+
+                    restablecerTablas()
+
+                    mostrarMensaje(
+                        titulo = "Nuevo Turno",
+                        mensaje = "Los datos anteriores han sido enviados correctamente."
+                    )
+                    bloquearFilasDesde('A')
+                }
+            } else {    //no hay cambio de turno, solo actualiza las horas
+                val fila = obtenerFilaDeHora(horaDelDia)
+                desbloquearFila(fila)
             }
 
-            // Actualiza los TextViews con las horas correspondientes al turno
-            for(i in 0..7) {
-                horasTVs[0][i].text = horasTurno[i]
-                horasTVs[1][i].text = horasTurno[i]
-            }
-
-            if(!iniciandoApp) {
-                guardarEnBD()
-                detallesArray = JSONArray()
-
-                restablecerTablas()
-                mostrarMensaje("Nuevo Turno")
-                bloquearFilasDesde('A')
-            }
-        } else {    //no hay cambio de turno, solo actualiza las horas
-            val fila = obtenerFilaDeHora(horaDelDia)
-            desbloquearFila(fila)
+            horaActual = horaDelDia
+            delay(1000 * 60)
         }
-
-        horaActual = horaDelDia
-        handler.postDelayed({ actualizarTurno() }, 1000 * 60)
     }
 
     fun bloquearFilasDesde(fila: Char) {
@@ -757,52 +768,63 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         }
     }
 
-    fun guardarEnBD() {
+    suspend fun guardarEnBD() {
+        withContext(Dispatchers.IO) {
+            val fila = obtenerFilaDeHora(horaActual)
+            val posicion = obtenerPosicionDeFila(fila)
 
-        val fila = obtenerFilaDeHora(horaActual)
-        val posicion = obtenerPosicionDeFila(fila)
+            val detalleTurno = JSONObject().apply {
+                put("hora", horaActual.toString() + ":00")
+                put("paleta_por_hora", "0")                                                                                      //TODO: agregarPaleta
+                celdasTabla1[posicion].forEachIndexed { i, celda -> put("produccion_por_hora_${i + 1}", celda.text.toString()) }
+                celdasDefectos[posicion].forEachIndexed { i, defecto -> put("defecto_por_hora_${i + 1}", defecto.text.toString()) }
+                put("temple","POR DEFINIR")                                                                                               //TODO: agregarTemple
+                put("total_uds", udsTotalesHoraTVs[posicion].text.toString())
+                put("eficiencia", eficienciaHoraTVs[posicion].text.toString().substringBefore("%"))
+                put("id_turno", turno.toString())
+            }
 
-        val detalleTurno = JSONObject().apply {
-            put("hora", horaActual.toString()+":00")
-            put("paleta_por_hora", "0")                                                                                      //TODO: agregarPaleta
-            celdasTabla1[posicion].forEachIndexed { i, celda -> put("produccion_por_hora_${i+1}", celda.text.toString()) }
-            celdasDefectos[posicion].forEachIndexed { i, defecto -> put("defecto_por_hora_${i+1}", defecto.text.toString()) }
-            put("temple", "POR DEFINIR")                                                                                               //TODO: agregarTemple
-            put("total_uds", udsTotalesHoraTVs[posicion].text.toString())
-            put("eficiencia", eficienciaHoraTVs[posicion].text.toString().substringBefore("%"))
-            put("id_turno", turno.toString())
-        }
+            detallesArray = JSONArray().apply { put(detalleTurno) }
 
-        detallesArray = JSONArray().apply { put(detalleTurno) }
+            val horario = when (turno) {
+                1 -> "7am - 2pm"
+                2 -> "3pm - 10pm"
+                3 -> "11pm - 6am"
+                else -> throw IllegalArgumentException("Turno inválido: $turno")
+            }
 
-        val turno = JSONObject().apply {
-            put("observaciones", observacionesET.text.toString())
-            put("operador", firmaET.text.toString())
-            put("unidades_totales", udsTotalesTurnoTV.text.toString())
-            put("eficiencia_total", eficienciaTotalTurnoTV.text.toString().substringBefore("%"))
-            moldesETs.forEachIndexed { i, molde -> put("moldeSec${i+1}", molde.text.toString()) }
+            val turno = JSONObject().apply {
+                put("id_turno", turno.toString())
+                put("horario", horario)
+                put("operador", firmaET.text.toString())
+                put("unidades_totales", udsTotalesTurnoTV.text.toString())
+                put("eficiencia_total", eficienciaTotalTurnoTV.text.toString().substringBefore("%"))
+                moldesETs.forEachIndexed { i, molde -> put("moldeSec${i + 1}", molde.text.toString()) }
+                put("observaciones", observacionesET.text.toString())
 
-            put("detalle_por_hora", detallesArray)
-        }
+                put("detalle_por_hora", detallesArray)
+            }
 
-        val mensaje = JSONObject().apply {
-            put("type", "bd")
+            val mensaje = JSONObject().apply {
+                put("type", "bd")
 
-            put("fecha", fechaTV.text.toString())
-            put("linea", lineaET.text.toString())
-            put("molde", moldeET.text.toString())
-            put("velocidad", velocidadET.text.toString())
-            put("tiempo_de_archa", tiempoDeArchaET.text.toString())
-            put("obj_de_linea", objDeLineaET.text.toString())
-            put("uds_por_hora", udsHoraET.text.toString())
-            put("uds_por_turno", udsTurnoET.text.toString())
-            put("turno", turno)
-        }
+                put("fecha", fechaTV.text.toString())
+                put("linea", lineaET.text.toString())
+                put("molde", moldeET.text.toString())
+                put("velocidad", velocidadET.text.toString())
+                put("tiempo_de_archa", tiempoDeArchaET.text.toString())
+                put("obj_de_linea", objDeLineaET.text.toString())
+                put("uds_por_hora", udsHoraET.text.toString())
+                put("uds_por_turno", udsTurnoET.text.toString())
 
-        try {
-            webSocket.sendMessage(mensaje)
-        } catch (e: JSONException) {
-            mostrarMensaje("Error al crear JSON: ${e.message}")
+                put("turno", turno)
+            }
+
+            try {
+                webSocket.sendMessage(mensaje)
+            } catch (e: JSONException) {
+                mostrarMensaje("Error al crear JSON: ${e.message}")
+            }
         }
     }
 
