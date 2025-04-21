@@ -354,74 +354,90 @@
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
                     android:padding="2sp"
+                    android:inputType="number"
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta4"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta6"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta7"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
                 <EditText
+                    android:id="@+id/paleta8"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/header_cell_shape"
                     android:gravity="center"
+                    android:inputType="number"
                     android:padding="2sp"
                     android:textSize="14sp" />
 
@@ -2432,11 +2448,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Firma:"
+                        android:text="Operador:"
                         android:textSize="20sp" />
 
                     <EditText
-                        android:id="@+id/et_firma"
+                        android:id="@+id/et_operador"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="10dp"

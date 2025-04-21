@@ -69,8 +69,9 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     private lateinit var udsTurnoET: EditText
 
     private lateinit var grupoET: EditText
-    private lateinit var firmaET: EditText
+    private lateinit var operadorET: EditText
     private lateinit var observacionesET: EditText
+    private lateinit var paletaHoraETs: List<EditText>
 
     private var detallesArray: JSONArray = JSONArray()
 
@@ -209,10 +210,12 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
         objDeLineaET = findViewById(R.id.et_obj_de_linea)
         udsHoraET = findViewById(R.id.et_uds_hora)
         udsTurnoET = findViewById(R.id.et_uds_turno)
-        firmaET = findViewById(R.id.et_firma)
+        operadorET = findViewById(R.id.et_operador)
         observacionesET = findViewById(R.id.et_observaciones)
+        paletaHoraETs = listOf(R.id.paleta1, R.id.paleta2, R.id.paleta3, R.id.paleta4, R.id.paleta5, R.id.paleta6, R.id.paleta7, R.id.paleta8)
+            .map { id -> findViewById(id) }
 
-        camposObligatorios = listOf(grupoET, lineaET, moldeET, velocidadET, tiempoDeArchaET, objDeLineaET, udsHoraET, udsTurnoET, firmaET)
+        camposObligatorios = listOf(grupoET, lineaET, moldeET, velocidadET, tiempoDeArchaET, objDeLineaET, udsHoraET, udsTurnoET, operadorET)
 //                udsTotalesHoraTVs + udsTotalesTurnoTV + eficienciaHoraTVs + eficienciaTotalTurnoTV
 
         camposObligatorios.forEach { celda ->
@@ -331,48 +334,51 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
     suspend fun actualizarTurno() {
         while(true) {
             val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val fechaActual =
-                formatoFecha.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
+            val fechaActual = formatoFecha.format(Calendar.getInstance().time) // Usamos .time para obtener la fecha completa
             fechaTV.text = fechaActual
 
             val horaDelDia = obtenerHora()
             val nuevoTurno = decidirTurno(horaDelDia)
 
-            //hay cambio de turno
-            if (turno != nuevoTurno) {
-                turno = nuevoTurno
+            //hay cambio de hora
+            if(horaDelDia != horaActual) {
 
-                val horasTurno = when (turno) {
-                    1 -> listOf("7:00 am", "8:00 am", "9:00 am", "10:00 am", "11:00 am", "12:00 pm", "1:00 pm", "2:00 pm")
-                    2 -> listOf("3:00 pm", "4:00 pm", "5:00 pm", "6:00 pm", "7:00 pm", "8:00 pm", "9:00 pm", "10:00 pm")
-                    3 -> listOf("11:00 pm", "12:00 am", "1:00 am", "2:00 am", "3:00 am", "4:00 am", "5:00 am", "6:00 am")
-                    else -> throw IllegalArgumentException("Turno inválido: $turno")
-                }
+                //hay cambio de turno
+                if (turno != nuevoTurno) {
+                    turno = nuevoTurno
 
-                // Actualiza los TextViews con las horas correspondientes al turno
-                for (i in 0..7) {
-                    horasTVs[0][i].text = horasTurno[i]
-                    horasTVs[1][i].text = horasTurno[i]
-                }
+                    val horasTurno = when (turno) {
+                        1 -> listOf("7:00 am", "8:00 am", "9:00 am", "10:00 am", "11:00 am", "12:00 pm", "1:00 pm", "2:00 pm")
+                        2 -> listOf("3:00 pm", "4:00 pm", "5:00 pm", "6:00 pm", "7:00 pm", "8:00 pm", "9:00 pm", "10:00 pm")
+                        3 -> listOf("11:00 pm", "12:00 am", "1:00 am", "2:00 am", "3:00 am", "4:00 am", "5:00 am", "6:00 am")
+                        else -> throw IllegalArgumentException("Turno inválido: $turno")
+                    }
 
-                if (!iniciandoApp) {
-                    detallesArray = JSONArray()
+                    // Actualiza los TextViews con las horas correspondientes al turno
+                    for (i in 0..7) {
+                        horasTVs[0][i].text = horasTurno[i]
+                        horasTVs[1][i].text = horasTurno[i]
+                    }
+
+                    if (!iniciandoApp) {
+                        detallesArray = JSONArray()
+                        restablecerTablas()
+
+                        mostrarMensaje(
+                            titulo = "Nuevo Turno",
+                            mensaje = "Los datos anteriores han sido enviados correctamente."
+                        )
+
+                        bloquearFilasDesde('A')
+                    }
+                } else {    //no hay cambio de turno, solo actualiza las horas
+                    val fila = obtenerFilaDeHora(horaDelDia)
+                    desbloquearFila(fila)
 
                     withContext(Dispatchers.IO) {
                         guardarEnBD()
                     }
-
-                    restablecerTablas()
-
-                    mostrarMensaje(
-                        titulo = "Nuevo Turno",
-                        mensaje = "Los datos anteriores han sido enviados correctamente."
-                    )
-                    bloquearFilasDesde('A')
                 }
-            } else {    //no hay cambio de turno, solo actualiza las horas
-                val fila = obtenerFilaDeHora(horaDelDia)
-                desbloquearFila(fila)
             }
 
             horaActual = horaDelDia
@@ -775,7 +781,7 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
 
             val detalleTurno = JSONObject().apply {
                 put("hora", horaActual.toString() + ":00")
-                put("paleta_por_hora", "0")                                                                                      //TODO: agregarPaleta
+                put("paleta_por_hora", paletaHoraETs[posicion].text.toString())
                 celdasTabla1[posicion].forEachIndexed { i, celda -> put("produccion_por_hora_${i + 1}", celda.text.toString()) }
                 celdasDefectos[posicion].forEachIndexed { i, defecto -> put("defecto_por_hora_${i + 1}", defecto.text.toString()) }
                 put("temple","POR DEFINIR")                                                                                               //TODO: agregarTemple
@@ -796,7 +802,8 @@ class MainActivity : AppCompatActivity(), WebSocketEventListener {
             val turno = JSONObject().apply {
                 put("id_turno", turno.toString())
                 put("horario", horario)
-                put("operador", firmaET.text.toString())
+                put("grupo", grupoET.text.toString())
+                put("operador", operadorET.text.toString())
                 put("unidades_totales", udsTotalesTurnoTV.text.toString())
                 put("eficiencia_total", eficienciaTotalTurnoTV.text.toString().substringBefore("%"))
                 moldesETs.forEachIndexed { i, molde -> put("moldeSec${i + 1}", molde.text.toString()) }
